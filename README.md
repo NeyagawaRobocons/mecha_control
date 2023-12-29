@@ -151,5 +151,5 @@ bool bonbori_state
     - /hina_dastpanトピック(mecha_control/msg/ActuatorCommands型)
   - 出力：
     - 機構の状態
-    - /daiza_stateトピック(mecha_control/msg/DaizaState型)
-    - /hina_stateトピック(mecha_control/msg/HinaState型)
+    - /daiza_stateトピック(mecha_control/msg/SensorStates型)
+    - /hina_stateトピック(mecha_control/msg/SensorStates型)
