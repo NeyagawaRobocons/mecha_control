@@ -74,24 +74,29 @@
 - nucleo_agentとtopicで相互通信し続ける形で指令を送る
 - サーボ以外全部1, 0で送る
 - 機構ごとにトピックを作成
+  - 台座機構指令: /daiza_clampトピック(mecha_control/msg/ActuatorCommands.msg)
+  - 台座機構状態: /daiza_stateトピック(mecha_control/msg/SensorStates.msg)
 ```
-# mecha_control/msg/DaizaClamp.msg
-bool[] state
-```
-
-```
-# mecha_control/msg/DaizaState.msg
-
+# mecha_control/msg/ActuatorCommands.msg
+float64[] motor_positions    # モータの位置や角度を制御するための値
+bool[] cylinder_states       # エアシリンダのオン/オフ状態
 ```
 
 ```
-# mecha_control/msg/HinaDustpan.msg
-bool[] state
-float64[] servo
+# mecha_control/msg/SensorStates.msg
+float64[] potentiometer_angles   # ポテンショメータで測定される角度
+bool[] limit_switch_states       # リミットスイッチのオン/オフ状態
 ```
 
+## 機構を動かす指令
+- これもトピックで実装
+- /mecha_stateトピック(mecha_control/msg/MechaState型)
+
 ```
-# mecha_control/msg/HinaState.msg
+# mecha_control/msg/MechaState.msg
+byte daiza_state
+byte hina_state
+bool bonbori_state
 ```
 
 ## デバッグ用のあれこれ仕様
@@ -108,12 +113,12 @@ float64[] servo
     - 形式：boolとfloat64
   - 入力2：
     - 機構の状態
-    - /daiza_stateトピック(mecha_control/msg/DaizaState型)
-    - /hina_stateトピック(mecha_control/msg/HinaState型)
+    - /daiza_stateトピック(mecha_control/msg/SensorStates型)
+    - /hina_stateトピック(mecha_control/msg/SensorStates型)
   - 出力：
     - 機構の指令
-    - /daiza_clampトピック(mecha_control/msg/DaizaClamp型)
-    - /hina_dastpanトピック(mecha_control/msg/HinaDustpan型)
+    - /daiza_clampトピック(mecha_control/msg/ActuatorCommands型)
+    - /hina_dastpanトピック(mecha_control/msg/ActuatorCommands型)
 
 ### シーケンス動作チェック用コントローラ仕様
 - 以下の3つの動作を指定できる
@@ -129,12 +134,12 @@ float64[] servo
     - /mecha_stateトピック(mecha_control/msg/MechaState型)
   - 入力2：
     - 機構の状態
-    - /daiza_stateトピック(mecha_control/msg/DaizaState型)
-    - /hina_stateトピック(mecha_control/msg/HinaState型)
+    - /daiza_stateトピック(mecha_control/msg/SensorStates型)
+    - /hina_stateトピック(mecha_control/msg/SensorStates型)
   - 出力：
     - 機構の指令
-    - /daiza_clampトピック(mecha_control/msg/DaizaClamp型)
-    - /hina_dastpanトピック(mecha_control/msg/HinaDustpan型)
+    - /daiza_clampトピック(mecha_control/msg/ActuatorCommands型)
+    - /hina_dastpanトピック(mecha_control/msg/ActuatorCommands型)
 
 ### ダミー機構ノード
 - 機構指令のトピックを受け取り、機構の状態を返す
@@ -142,8 +147,8 @@ float64[] servo
 - 入出力：
   - 入力：
     - 機構の指令
-    - /daiza_clampトピック(mecha_control/msg/DaizaClamp型)
-    - /hina_dastpanトピック(mecha_control/msg/HinaDustpan型)
+    - /daiza_clampトピック(mecha_control/msg/ActuatorCommands型)
+    - /hina_dastpanトピック(mecha_control/msg/ActuatorCommands型)
   - 出力：
     - 機構の状態
     - /daiza_stateトピック(mecha_control/msg/DaizaState型)
