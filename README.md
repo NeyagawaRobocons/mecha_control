@@ -112,7 +112,7 @@ bool bonbori_state
 ## メッセージの中身
 ### 台座機構
 
-#### `ActuatorCommands.msg`（アクチュエータ指令）
+#### `/daiza_clamp`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `cylinder_states`（シリンダの状態）
   - `0`: シリンダ1
   - `1`: シリンダ2
@@ -120,18 +120,19 @@ bool bonbori_state
 - `motor_positions`（モータの位置）
   - `0`: 角度調整モータ
 
-#### `SensorStates.msg`（センサ状態）
+#### `/daiza_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
   - `0`: リミットスイッチ(上)
   - `1`: リミットスイッチ(下)
   - `2`: リミットスイッチ(台座)
-  - `3`: シリンダ1
-  - `4`: シリンダ2
-  - `5`: シリンダ3
+- `cylinder_states` (シリンダの状態)
+  - `0`: シリンダ1
+  - `1`: シリンダ2
+  - `2`: シリンダ3
 
 ### 人形機構
 
-#### `ActuatorCommands.msg`（アクチュエータ指令）
+#### `/hina_dastpan`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `cylinder_states`（シリンダの状態）
   - `0`: シリンダ1
   - `1`: シリンダ2
@@ -139,14 +140,15 @@ bool bonbori_state
   - `0`: モータ1
   - `1`: モータ2
 
-#### `SensorStates.msg`（センサ状態）
+#### `/hina_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
   - `0`: リミットスイッチ(180)1
   - `1`: リミットスイッチ(180)2
   - `2`: リミットスイッチ(壁)1
   - `3`: リミットスイッチ(壁)2
-  - `4`: シリンダ1
-  - `5`: シリンダ2
+- `cylinder_states` (シリンダの状態)
+  - `0`: シリンダ1
+  - `1`: シリンダ2
 - `potentiometer_angles`（ポテンショメータの角度）
   - `0`: ポテンショメータ1
   - `1`: ポテンショメータ2
