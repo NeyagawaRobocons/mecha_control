@@ -134,9 +134,6 @@ bool bonbori_state
 ### 人形機構
 
 #### `/hina_dastpan`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
-- `cylinder_states`（シリンダの状態）
-  - `0`: シリンダ1
-  - `1`: シリンダ2
 - `motor_positions`（モータの位置）
   - `0`: モータ1
   - `1`: モータ2
