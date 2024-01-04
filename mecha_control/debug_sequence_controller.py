@@ -52,6 +52,8 @@ class DebugSequenceController(Node):
             elif event == 'hina_setti':
                 msg.hina_state = bytes([3])   # 設置
             elif event == 'bonbori_tento':
+                msg.daiza_state = bytes([0])
+                msg.hina_state = bytes([0])
                 msg.bonbori_state = True      # 点灯開始
 
             # Publish the message
