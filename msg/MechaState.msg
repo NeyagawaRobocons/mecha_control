@@ -1,5 +1,5 @@
 # mecha_control/msg/MechaState.msg
-# 0: 準備
+# 4: 準備
 # 1: 展開
 # 2: 回収
 # 3: 設置
