@@ -146,6 +146,9 @@ bool bonbori_state
 - `potentiometer_angles`（ポテンショメータの角度）
   - `0`: ポテンショメータ
 
+### ぼんぼり点灯
+`/bonbori`トピック(`std_msgs/msg/Bool.msg`)
+
 ## デバッグ用のあれこれ仕様
 ### デバッグ用コントローラ仕様
 - 各アクチュエータを動かせるかテストする
