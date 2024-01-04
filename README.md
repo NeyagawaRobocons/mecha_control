@@ -147,7 +147,7 @@ bool bonbori_state
   - `0`: ポテンショメータ
 
 ### ぼんぼり点灯
-`/bonbori`トピック(`std_msgs/msg/Bool.msg`)
+-  /mecha_stateトピック(mecha_control/msg/MechaState型)
 
 ## デバッグ用のあれこれ仕様
 ### デバッグ用コントローラ仕様
