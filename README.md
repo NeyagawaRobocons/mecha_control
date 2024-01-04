@@ -132,8 +132,9 @@ bool bonbori_state
 
 #### `/hina_dastpan`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `motor_positions`（モータの位置）
+  - `0`: モータ2 -> 傾き
+- `motor_expand`
   - `0`: モータ1 -> 上下
-  - `1`: モータ2 -> 傾き
 
 #### `/hina_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
