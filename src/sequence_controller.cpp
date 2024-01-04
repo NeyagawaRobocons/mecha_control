@@ -32,7 +32,7 @@ public:
 
         // タイマーの初期化（ここではまだスタートしない）
         timer_ = this->create_wall_timer(
-            std::chrono::seconds(1),  // 1秒後に実行
+            std::chrono::seconds(2),  // 1秒後に実行
             std::bind(&SequenceController::timer_callback, this));
         daiza_set_flag = false; // リミットスイッチ(下)が押されたらシリンダ1, 2, 3を展開する指令を送信
     }
@@ -60,7 +60,7 @@ private:
                 daiza_commands.motor_positions[0] = 1.0;
                 daiza_commands_publisher_->publish(daiza_commands);
                 break;
-            
+
             case 2: // 回収
                 std::cout << "daiza_state = 2" << std::endl;
                 if (current_daiza_state_.limit_switch_states[2]) {
@@ -73,6 +73,7 @@ private:
                 }
                 // 角度調整モータを動かす指令を送信（リミットスイッチ(上)が押されるまで）
                 daiza_commands.motor_positions[0] = -1.0;
+                daiza_commands_publisher_->publish(daiza_commands);
                 break;
 
             case 3: // 設置
@@ -89,7 +90,20 @@ private:
         } 
         // 人形機構の処理
         else if (msg->hina_state) {
-            // 人形機構の目標状態に応じた処理をここに実装
+            switch (msg->hina_state)
+            {
+            case 1: // 展開
+                break;
+
+            case 2: // 回収
+                break;
+
+            case 3: // 設置
+                break;
+            
+            default:
+                break;
+            }
         }
         // ぼんぼり点灯の処理
         else if (msg->bonbori_state) {
