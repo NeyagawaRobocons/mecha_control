@@ -115,10 +115,10 @@ bool bonbori_state
 
 #### `/daiza_clamp`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `cylinder_states`（シリンダの状態）
-  - `0`: シリンダ1
-  - `1`: シリンダ2
-  - `2`: シリンダ3
-  - `3`: シリンダ4
+  - `0`: シリンダ(右)
+  - `1`: シリンダ(左)
+  - `2`: シリンダ(小)
+  - `3`: シリンダ(展)
 #### `/daiza_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
   - `0`: リミットスイッチ(台座)
@@ -132,8 +132,9 @@ bool bonbori_state
 
 #### `/hina_dastpan`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `motor_positions`（モータの位置）
+  - `0`: モータ2 -> 傾き
+- `motor_expand`
   - `0`: モータ1 -> 上下
-  - `1`: モータ2 -> 傾き
 
 #### `/hina_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
@@ -144,6 +145,9 @@ bool bonbori_state
   - `4`: リミットスイッチ(180)
 - `potentiometer_angles`（ポテンショメータの角度）
   - `0`: ポテンショメータ
+
+### ぼんぼり点灯
+-  /mecha_stateトピック(mecha_control/msg/MechaState型)
 
 ## デバッグ用のあれこれ仕様
 ### デバッグ用コントローラ仕様
