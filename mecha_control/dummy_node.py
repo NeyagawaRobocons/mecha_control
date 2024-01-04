@@ -70,6 +70,7 @@ class DummyNode(Node):
         else:  # 設置の場合
             self.daiza_states.cylinder_states = [True, True, True, True]       # シリンダが展開
         self.daiza_publisher.publish(self.daiza_states)
+        self.hina_publisher.publish(self.hina_states)
         self.get_logger().info(f"daiza_states: {self.daiza_states}")
 
     def actuator_callback_hina(self, msg):
@@ -83,6 +84,7 @@ class DummyNode(Node):
             self.hina_states.limit_switch_states = [False, True, False, False]
         elif motor_positions == [-10.0]:
             self.hina_states.potentiometer_angles = [-10.0]
+        self.daiza_publisher.publish(self.daiza_states)
         self.hina_publisher.publish(self.hina_states)
         self.get_logger().info(f"hina_states: {self.hina_states}")
 
