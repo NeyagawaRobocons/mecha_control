@@ -2,6 +2,7 @@
 #include "mecha_control/msg/mecha_state.hpp"
 #include "mecha_control/msg/sensor_states.hpp"
 #include "mecha_control/msg/actuator_commands.hpp"
+#include <unistd.h> // sleep関数を使うために必要
 
 class SequenceController : public rclcpp::Node {
 public:
@@ -21,31 +22,19 @@ public:
         // 台座と人形機構の現在の状態を保存するメンバ変数の初期化
         current_daiza_state_ = mecha_control::msg::SensorStates();
         current_hina_state_ = mecha_control::msg::SensorStates();
+        
+        daiza_commands = mecha_control::msg::ActuatorCommands();
+        hina_commands = mecha_control::msg::ActuatorCommands();
 
         // 台座機構の目標状態を初期化
-        daiza_commands.cylinder_states.resize(3, false);  // シリンダの状態をすべて false（縮んでいる）に初期化
-        daiza_commands.motor_positions.resize(1, 0.0);    // モータの位置を 0.0（初期位置）に初期化
+        daiza_commands.cylinder_states.resize(4, false);  // シリンダの状態をすべて false（縮んでいる）に初期化
 
         // 人形機構の目標状態を初期化
-        hina_commands.cylinder_states.resize(2, false);  // シリンダの状態をすべて false（縮んでいる）に初期化
-        hina_commands.motor_positions.resize(2, 0.0);    // モータの位置を 0.0（初期位置）に初期化
-
-        // タイマーの初期化（ここではまだスタートしない）
-        timer_ = this->create_wall_timer(
-            std::chrono::seconds(2),  // 1秒後に実行
-            std::bind(&SequenceController::timer_callback, this));
-        daiza_set_flag = false; // リミットスイッチ(下)が押されたらシリンダ1, 2, 3を展開する指令を送信
+        hina_commands.motor_positions.resize(1, 0.0);    // モータの位置を 0.0（初期位置）に初期化
+        hina_commands.motor_expand.resize(1, false);     // モータの展開状態をすべて false（縮んでいる）に初期化
     }
 
 private:
-    void timer_callback() {
-        // タイマーのコールバック関数
-        // ここに1秒後に実行する処理を記述
-        // 例：シリンダ1, 2を縮める指令を送信
-        daiza_commands.cylinder_states[0] = false;
-        daiza_commands.cylinder_states[1] = false;
-    }
-
     void mecha_state_callback(const mecha_control::msg::MechaState::SharedPtr msg) {
         // 台座機構の処理
         if (msg->daiza_state) {
@@ -53,34 +42,42 @@ private:
             switch (msg->daiza_state)
             {
             case 1: // 展開
-                std::cout << "daiza_state = 1" << std::endl;
+                std::cout << "台座機構の展開" << std::endl;
+                // 展開用シリンダを動かす指令を送信
+                daiza_commands.cylinder_states[3] = true;
+                daiza_commands_publisher_->publish(daiza_commands);
+                sleep(1); // 1秒待つ（シリンダが展開するのを待つ）
                 // シリンダ1, 2, 3を展開する指令を送信
                 for (int i = 0; i < 3; i++) { daiza_commands.cylinder_states[i] = true; }
-                // 角度調整モータを動かす指令を送信（リミットスイッチ(下)が押されるまで）
-                daiza_commands.motor_positions[0] = 1.0;
                 daiza_commands_publisher_->publish(daiza_commands);
                 break;
 
             case 2: // 回収
-                std::cout << "daiza_state = 2" << std::endl;
+                std::cout << "台座機構の回収" << std::endl;
                 if (current_daiza_state_.limit_switch_states[2]) {
-                    // シリンダ3を縮める指令を送信（小台座を倒す）
+                    // シリンダ(小)を縮める指令を送信（小台座を倒す）
                     daiza_commands.cylinder_states[2] = false;
                     daiza_commands_publisher_->publish(daiza_commands);
-                    // タイマーを開始（1秒後にコールバックが実行される）
-                    timer_->reset();
+                    sleep(1); // 1秒待つ
+                    // シリンダ(右), (左)を縮める: 台座を挟む
+                    daiza_commands.cylinder_states[0] = false;
+                    daiza_commands.cylinder_states[1] = false;
                     daiza_commands_publisher_->publish(daiza_commands);
                 }
-                // 角度調整モータを動かす指令を送信（リミットスイッチ(上)が押されるまで）
-                daiza_commands.motor_positions[0] = -1.0;
+                sleep(1); // 1秒待つ
+                // 展開用シリンダを動かす指令を送信(縮める)
+                daiza_commands.cylinder_states[3] = false;
                 daiza_commands_publisher_->publish(daiza_commands);
                 break;
 
             case 3: // 設置
-                std::cout << "daiza_state = 3" << std::endl;
-                // 角度調整モータを動かす指令を送信（リミットスイッチ(下)が押されるまで）
-                daiza_commands.motor_positions[0] = -1.0;
-                daiza_set_flag = true; // リミットスイッチ(下)が押されたらシリンダ1, 2, 3を展開する指令を送信
+                std::cout << "台座機構の設置" << std::endl;
+                // 展開用シリンダを動かす指令を送信
+                daiza_commands.cylinder_states[3] = true;
+                daiza_commands_publisher_->publish(daiza_commands);
+                sleep(1); // 1秒待つ（シリンダが展開するのを待つ）
+                // シリンダ1, 2, 3を展開する指令を送信
+                for (int i = 0; i < 3; i++) { daiza_commands.cylinder_states[i] = true; }
                 daiza_commands_publisher_->publish(daiza_commands);    
                 break;
 
@@ -92,43 +89,66 @@ private:
         else if (msg->hina_state) {
             switch (msg->hina_state)
             {
+            case 0: // 準備
+                // モータ2: ポテンショメータが90°になるまで展開
+                if (current_hina_state_.potentiometer_angles[1] < 90.0) {
+                    hina_commands.motor_positions[1] = 90.0;
+                    hina_commands_publisher_->publish(hina_commands);
+                }
+                // モータ1: リミットスイッチ(下)が押されるまで縮める
+                hina_commands.motor_expand[0] = false;
+                hina_commands_publisher_->publish(hina_commands);
+                break;
+
             case 1: // 展開
+                // モータ2: ポテンショメータが-10° (調整できるようにする)になるまで動かす
+                if (current_hina_state_.potentiometer_angles[1] > -10.0) {
+                    hina_commands.motor_positions[1] = -10.0;
+                    hina_commands_publisher_->publish(hina_commands);
+                }
                 break;
 
             case 2: // 回収
+                // if (リミットスイッチ(壁)1, 2が両方押されたら)
+                if (current_hina_state_.limit_switch_states[2] && current_hina_state_.limit_switch_states[3]) {
+                    // モータ2: テンショメータ1,2が90°になるまで縮める
+                    if (current_hina_state_.potentiometer_angles[1] < 90.0) {
+                        hina_commands.motor_positions[1] = 90.0;
+                        hina_commands_publisher_->publish(hina_commands);
+                    }
+                    // モータ1: リミットスイッチ(下)が押されるまで縮める
+                    hina_commands.motor_expand[0] = false;
+                    hina_commands_publisher_->publish(hina_commands);
+                }
                 break;
 
             case 3: // 設置
+                // if (リミットスイッチ(上)が押されいる)
+                if (current_hina_state_.limit_switch_states[0]) {
+                    // モータ2: ポテンショメータが-10° (調整できるようにする)になるまで動かす
+                    if (current_hina_state_.potentiometer_angles[1] > -10.0) {
+                        hina_commands.motor_positions[1] = -10.0;
+                        hina_commands_publisher_->publish(hina_commands);
+                    }
+                    sleep(1); // 1秒待つ
+                    // モータ2: テンショメータが90°になるまで縮める
+                    if (current_hina_state_.potentiometer_angles[1] < 90.0) {
+                        hina_commands.motor_positions[1] = 90.0;
+                        hina_commands_publisher_->publish(hina_commands);
+                    }
+                    // ぼんぼり点灯をする
+                }
                 break;
-            
+
             default:
                 break;
             }
-        }
-        // ぼんぼり点灯の処理
-        else if (msg->bonbori_state) {
-            // ぼんぼり点灯の処理をここに実装
         }
     }
 
     void daiza_state_callback(const mecha_control::msg::SensorStates::SharedPtr msg) {
         // 台座機構の状態を更新
         current_daiza_state_ = *msg;
-        // 対応するリミットスイッチが押されたら司令を停止
-        if (daiza_commands.motor_positions[0] > 0.0 && current_daiza_state_.limit_switch_states[1]) {
-            // リミットスイッチ(下)が押されたら角度調整モータの展開を停止
-            daiza_commands.motor_positions[0] = 0.0;
-            if (daiza_set_flag) {
-                // シリンダ1, 2, 3を展開する指令を送信
-                for (int i = 0; i < 3; i++) { daiza_commands.cylinder_states[i] = true; }
-            }
-            daiza_commands_publisher_->publish(daiza_commands);
-        }
-        else if (daiza_commands.motor_positions[0] < 0.0 && current_daiza_state_.limit_switch_states[0]) {
-            // リミットスイッチ(上)が押されたら角度調整モータの縮小を停止
-            daiza_commands.motor_positions[0] = 0.0;
-            daiza_commands_publisher_->publish(daiza_commands);
-        }
         RCLCPP_INFO(this->get_logger(), "received daiza state");
     }
 
@@ -153,7 +173,6 @@ private:
 
     mecha_control::msg::ActuatorCommands daiza_commands;
     mecha_control::msg::ActuatorCommands hina_commands;
-    bool daiza_set_flag;
 };
 
 int main(int argc, char **argv) {
