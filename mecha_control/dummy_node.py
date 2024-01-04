@@ -5,10 +5,10 @@
 
 #### `/daiza_clamp`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `cylinder_states`（シリンダの状態）
-  - `0`: シリンダ1
-  - `1`: シリンダ2
-  - `2`: シリンダ3
-  - `3`: シリンダ4
+  - `0`: シリンダ(右)
+  - `1`: シリンダ(左)
+  - `2`: シリンダ(小)
+  - `3`: シリンダ(展)
 #### `/daiza_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
   - `0`: リミットスイッチ(台座)
@@ -22,8 +22,9 @@
 
 #### `/hina_dastpan`トピック: `ActuatorCommands.msg`（アクチュエータ指令）
 - `motor_positions`（モータの位置）
+  - `0`: モータ2 -> 傾き
+- `motor_expand`
   - `0`: モータ1 -> 上下
-  - `1`: モータ2 -> 傾き
 
 #### `/hina_state`トピック: `SensorStates.msg`（センサ状態）
 - `limit_switch_states`（リミットスイッチの状態）
@@ -62,6 +63,8 @@ class DummyNode(Node):
         # 受け取ったコマンドを処理
         if all(msg.cylinder_states):  # 展開の場合
             self.daiza_states.cylinder_states = [True, True, True, True]       # シリンダが展開
+            self.daiza_publisher.publish(self.daiza_states)
+            self.daiza_states.limit_switch_states = [True]
         elif not any(msg.cylinder_states):  # 回収の場合
             self.daiza_states.cylinder_states = [False, False, False, False]    # シリンダが縮む
         else:  # 設置の場合
@@ -72,19 +75,14 @@ class DummyNode(Node):
     def actuator_callback_hina(self, msg):
         # モータとシリンダの状態に応じて処理
         motor_positions = msg.motor_positions
-
-        if motor_positions == [90.0] and not any(cylinder_states):  # 準備の場合
+        motor_expand = msg.motor_expand
+        if motor_positions == [90.0]:
             self.hina_states.limit_switch_states = [True, True, False, False]
-            self.hina_states.cylinder_states = [False, False]
             self.hina_states.potentiometer_angles = [90.0, 90.0]
-        elif motor_positions == [-10.0, -10.0]:  # 展開の場合
-            self.hina_states.potentiometer_angles = [-10.0, -10.0]
-        elif all(cylinder_states) and motor_positions == [90.0, 90.0]:  # 回収の場合
-            self.hina_states.limit_switch_states = [False, False, True, True]
-            self.hina_states.cylinder_states = [True, True]
-            self.hina_states.potentiometer_angles = [90.0, 90.0]
-        else:  # 設置の場合
-            self.hina_states.potentiometer_angles = [-10.0, -10.0]  # ここは適宜調整
+        elif not motor_expand:
+            self.hina_states.limit_switch_states = [False, True, False, False]
+        elif motor_positions == [-10.0]:
+            self.hina_states.potentiometer_angles = [-10.0]
         self.hina_publisher.publish(self.hina_states)
         self.get_logger().info(f"hina_states: {self.hina_states}")
 
