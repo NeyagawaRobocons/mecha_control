@@ -44,100 +44,68 @@
   - `0`: ポテンショメータ1
   - `1`: ポテンショメータ2
 """
-
 import rclpy
 from rclpy.node import Node
 from mecha_control.msg import ActuatorCommands, SensorStates
-import tkinter as tk
 
 class DummyNode(Node):
     def __init__(self):
         super().__init__('dummy_node')
         self.daiza_publisher = self.create_publisher(SensorStates, '/daiza_state', 10)
-        self.daiza_states = SensorStates()
         self.hina_publisher = self.create_publisher(SensorStates, '/hina_state', 10)
-        self.hina_states = SensorStates()
-        self.subscription_daiza = self.create_subscription(
-            ActuatorCommands, '/daiza_clamp', self.actuator_callback_daiza, 10)
-        self.subscription_hina = self.create_subscription(
-            ActuatorCommands, '/hina_dastpan', self.actuator_callback_hina, 10)
-        
-        # daiza's variables
-        self.daiza_states.limit_switch_states = [False] * 3
+        self.subscription_daiza = self.create_subscription(ActuatorCommands, '/daiza_clamp', self.actuator_callback_daiza, 10)
+        self.subscription_hina = self.create_subscription(ActuatorCommands, '/hina_dastpan', self.actuator_callback_hina, 10)
+
+        # daiza variables
+        self.daiza_states = SensorStates()
+        self.daiza_states.limit_switch_states = [True, False, False]
         self.daiza_states.cylinder_states = [False] * 3
-        # daiza_commands 配列の初期化
-        self.daiza_commands = ActuatorCommands()
-        self.daiza_commands.cylinder_states = [False] * 3
-        self.daiza_commands.motor_positions = [0.0]
 
-        # hina's variables
-        self.hina_states.limit_switch_states = [False] * 4
+        # hina variables
+        self.hina_states = SensorStates()
+        self.hina_states.limit_switch_states = [True, True, False, False]
         self.hina_states.cylinder_states = [False] * 2
-        self.hina_states.potentiometer_angles = [0.0] * 2
-        # hina_commands 配列の初期化
-        self.hina_commands = ActuatorCommands()
-        self.hina_commands.cylinder_states = [False] * 2
-        self.hina_commands.motor_positions = [0.0] * 2
-
-        self.init_gui()
-
-    def init_gui(self):
-        self.window = tk.Tk()
-        self.window.title("Dummy Node GUI")
-
-        # 台座機構のリミットスイッチのボタン
-        self.daiza_switch_buttons = {
-            "上": tk.Button(self.window, text="台座:リミットスイッチ(上)", command=lambda: self.update_limit_switch("台座", "上")),
-            "下": tk.Button(self.window, text="台座:リミットスイッチ(下)", command=lambda: self.update_limit_switch("台座", "下")),
-            "台座": tk.Button(self.window, text="台座:リミットスイッチ(台座)", command=lambda: self.update_limit_switch("台座", "台座"))
-        }
-        for button in self.daiza_switch_buttons.values():
-            button.pack()
-
-        # 人形機構のリミットスイッチのボタン
-        self.hina_switch_buttons = {
-            "180°": tk.Button(self.window, text="人形:リミットスイッチ(180°)", command=lambda: self.update_limit_switch("人形", "180°")),
-            "壁": tk.Button(self.window, text="人形:リミットスイッチ(壁)", command=lambda: self.update_limit_switch("人形", "壁"))
-        }
-        for button in self.hina_switch_buttons.values():
-            button.pack()
-
-        self.window.mainloop()
-
-    def update_limit_switch(self, kikou, switch):
-        index_map = {
-            "台座": {"上": 0, "下": 1, "台座": 2},
-            "人形": {"180°": 0, "壁": 1}
-        }
-        index = index_map[kikou][switch]
-        if kikou == "台座":
-            self.daiza_states.limit_switch_states[index] = not self.daiza_states.limit_switch_states[index]
-        elif kikou == "人形":
-            self.hina_states.limit_switch_states[index] = not self.hina_states.limit_switch_states[index]
-        self.daiza_publisher.publish(self.daiza_states)
-        self.hina_publisher.publish(self.hina_states)
 
     def actuator_callback_daiza(self, msg):
-        # 受け取ったメッセージから台座機構のシリンダ状態を更新
-        self.daiza_states.cylinder_states[0] = msg.cylinder_states[0]  # シリンダ1
-        self.daiza_states.cylinder_states[1] = msg.cylinder_states[1]
-        self.daiza_states.cylinder_states[2] = msg.cylinder_states[2]
+        self.get_logger().info(f"daiza_commands: {msg}")
+        # 受け取ったコマンドを処理
+        if all(msg.cylinder_states):  # 展開の場合
+            self.daiza_states.limit_switch_states = [False, True, False]  # 下のリミットスイッチが押される
+            self.daiza_states.cylinder_states = [True, True, True]        # シリンダが展開
+        elif not any(msg.cylinder_states):  # 回収の場合
+            self.daiza_states.limit_switch_states = [True, False, True]  # 上のリミットスイッチが押される
+            self.daiza_states.cylinder_states = [False, False, False]    # シリンダが縮む
+        else:  # 設置の場合
+            self.daiza_states.limit_switch_states = [False, True, False]  # 下のリミットスイッチが押される
+            self.daiza_states.cylinder_states = [True, True, True]        # シリンダが展開
         self.daiza_publisher.publish(self.daiza_states)
+        self.get_logger().info(f"daiza_states: {self.daiza_states}")
 
     def actuator_callback_hina(self, msg):
-        # 受け取ったメッセージから人形機構のシリンダ状態を更新
-        self.hina_states.cylinder_states[0] = msg.cylinder_states[0]
-        self.hina_states.cylinder_states[1] = msg.cylinder_states[1]
-        self.hina_publisher.publish(self.hina_states)
+        # モータとシリンダの状態に応じて処理
+        motor_positions = msg.motor_positions
+        cylinder_states = msg.cylinder_states
 
-    def show_commands(self):
-        self.get_logger("台座機構の指令: ", self.daiza_commands, "人形機構の指令: ", self.hina_commands)
+        if motor_positions == [90.0, 90.0] and not any(cylinder_states):  # 準備の場合
+            self.hina_states.limit_switch_states = [True, True, False, False]
+            self.hina_states.cylinder_states = [False, False]
+            self.hina_states.potentiometer_angles = [90.0, 90.0]
+        elif motor_positions == [-10.0, -10.0]:  # 展開の場合
+            self.hina_states.potentiometer_angles = [-10.0, -10.0]
+        elif all(cylinder_states) and motor_positions == [90.0, 90.0]:  # 回収の場合
+            self.hina_states.limit_switch_states = [False, False, True, True]
+            self.hina_states.cylinder_states = [True, True]
+            self.hina_states.potentiometer_angles = [90.0, 90.0]
+        else:  # 設置の場合
+            self.hina_states.potentiometer_angles = [-10.0, -10.0]  # ここは適宜調整
+        self.hina_publisher.publish(self.hina_states)
+        self.get_logger().info(f"hina_states: {self.hina_states}")
 
 def main(args=None):
     rclpy.init(args=args)
-    dummy_node = DummyNode()
-    rclpy.spin(dummy_node)
-    dummy_node.destroy_node()
+    node = DummyNode()
+    rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':

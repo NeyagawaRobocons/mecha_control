@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(mecha_control REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -20,6 +21,24 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ActuatorCommands.msg"
   "msg/MechaState.msg"
 )
+
+#-- for sequence_controller
+add_executable(sequence_controller
+  src/sequence_controller.cpp
+)
+target_include_directories(sequence_controller PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(sequence_controller
+  rclcpp
+  mecha_control
+  rosidl_default_generators
+)
+install(TARGETS sequence_controller
+  DESTINATION lib/${PROJECT_NAME}
+)
+#-- end sequence_controller
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -39,6 +58,7 @@ endif()
 install(PROGRAMS
   mecha_control/dummy_node.py
   mecha_control/debug_controller.py
+  mecha_control/debug_sequence_controller.py
   DESTINATION lib/${PROJECT_NAME}
 )
 #--- end Python

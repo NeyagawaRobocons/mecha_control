@@ -24,7 +24,8 @@ setup(
     entry_points={
         'console_scripts': [
             'dummy_node = mecha_control.dummy_node:main',
-            'debug_controller = mecha_control.debug_controller:main'
+            'debug_controller = mecha_control.debug_controller:main',
+            'debug_sequence_controller = mecha_control.debug_sequence_controller:main',
         ],
     },
 )
