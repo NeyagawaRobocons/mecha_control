@@ -93,5 +93,8 @@ int calcPotAngle(int potentiometerPin, int resetPin) {
     } else { // リセットボタンが押されていない場合は基準角度を考慮
       potAngle = 180 - (potAngle - base_angle);
     }
+
+    Serial.print("potValue: "); Serial.print(potValue);
+    Serial.print(", potAngle: "); Serial.println(potAngle);
     return potAngle;
 }
