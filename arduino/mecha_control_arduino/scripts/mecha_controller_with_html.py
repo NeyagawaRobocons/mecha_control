@@ -47,12 +47,12 @@ def read_serial_data(window):
 # フォントサイズを大きくし、ウィンドウサイズを調整
 layout = [
     [sg.Text("Arduinoからのシリアルデータ:", font=("Helvetica", 14))],
-    [sg.Multiline(key='-OUTPUT-', size=(70, 20), autoscroll=True, disabled=True, font=("Helvetica", 20))],
+    [sg.Multiline(key='-OUTPUT-', size=(70, 20), autoscroll=True, disabled=True, font=("Helvetica", 30))],
     [sg.Button('Exit', key='Exit', font=("Helvetica", 12))]
 ]
 
 # ウィンドウの作成、ウィンドウサイズを調整
-window = sg.Window('Arduino Serial Monitor', layout, size=(800, 600))
+window = sg.Window('Arduino Serial Monitor', layout, size=(1500, 600))
 
 def window_event_loop():
     """PySimpleGUIのイベントループを実行する"""
