@@ -2,17 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Test Page</title>
+    <title>Arduino Controller</title>
 </head>
 <body>
-    <button onclick="sendRequest('mechaExpand')">機構展開</button>
-    <button onclick="sendRequest('mechaRetract')">機構格納</button>
+    <h2>人形機構コントロール</h2>
+    <button onclick="sendCommand('moveUp')">Move Up</button>
+    <button onclick="sendCommand('moveDown')">Move Down</button>
+    <button onclick="sendCommand('expandArm')">Expand Arm</button>
+    <button onclick="sendCommand('contractArm')">Contract Arm</button>
+    <button onclick="sendCommand('resetArm')">Reset Arm</button>
+
+    <h2>台座機構コントロール</h2>
+    <button onclick="sendCommand('mechaExpand')">機構展開</button>
+    <button onclick="sendCommand('mechaRetract')">機構格納</button>
+    <button onclick="sendCommand('armOpen')">箱のアーム展開</button>
+    <button onclick="sendCommand('armClose')">箱のアーム閉じる</button>
+    <button onclick="sendCommand('boxArmExpand')">箱を倒すアームを展開</button>
+    <button onclick="sendCommand('boxArmRetract')">箱を倒すアームを縮小</button>
+
+    <h2>Arduino Serial Output:</h2>
+    <div id="output"></div>
 
     <script>
-        function sendRequest(action) {
-            fetch(`http://127.0.0.1:8000/?action=${action}`)
+        function sendCommand(command) {
+            fetch(`http://127.0.0.1:8000/?command=${command}`)
                 .then(response => response.text())
-                .then(data => console.log(data))
+                .then(data => {
+                    const outputDiv = document.getElementById('output');
+                    outputDiv.textContent += data + '\n';
+                })
                 .catch(error => console.error('Error:', error));
         }
     </script>
