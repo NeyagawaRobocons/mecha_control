@@ -17,10 +17,10 @@ const int potentiometerPin = A2;    // ポテンショメータ用ピン
 const int resetPin = 11;            // リセット用ピン
 
 // エアシリンダ制御用のピン
-const int armOpenPin = 43;          // 箱のアーム展開ピン
-const int armClosePin = 45;         // 箱のアーム閉じるピン
-const int boxArmExpandPin = 47;     // 箱を倒すアームの展開ピン
-const int boxArmRetractPin = 49;    // 箱を倒すアームの閉じるピン
+const int armOpenPin = 45;          // 箱のアーム展開ピン
+const int armClosePin = 43;         // 箱のアーム閉じるピン
+const int boxArmExpandPin = 49;     // 箱を倒すアームの展開ピン
+const int boxArmRetractPin = 47;    // 箱を倒すアームの閉じるピン
 const int mechaExpandPin = 51;      // 機構全体を展開するピン
 const int mechaRetractPin = 53;     // 機構全体を縮小するピン
 
