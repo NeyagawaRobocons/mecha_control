@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Page</title>
+</head>
+<body>
+    <button onclick="sendRequest('mechaExpand')">機構展開</button>
+    <button onclick="sendRequest('mechaRetract')">機構格納</button>
+
+    <script>
+        function sendRequest(action) {
+            fetch(`http://127.0.0.1:8000/?action=${action}`)
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
