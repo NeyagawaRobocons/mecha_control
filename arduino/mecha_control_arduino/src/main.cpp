@@ -1,7 +1,16 @@
 #include <Arduino.h>
-#include "DualVNH5019MotorShield.h"
 
-DualVNH5019MotorShield md;
+// 上下展開用のモーター制御用のピン
+const int motorExpandPin = 27;       // モーター展開用ピン
+const int motorRetractPin = 29;      // モーター縮小用ピン
+
+// アーム展開用のモーター制御用のピン
+const int armMotorExpandPin = 23;    // アームモーター展開用ピン
+const int armMotorRetractPin = 25;   // アームモーター縮小用ピン
+
+const int expandSpeed = 130;         // 展開時のモーターの速度
+const int retractSpeed = 130;        // 縮小時のモーターの速度
+
 const int limitSwitchUpperPin = 3;  // 上部リミットスイッチ用ピン
 const int limitSwitchLowerPin = 5;  // 下部リミットスイッチ用ピン
 const int potentiometerPin = A2;    // ポテンショメータ用ピン
@@ -17,120 +26,144 @@ const int mechaRetractPin = 53;     // 機構全体を縮小するピン
 
 String current_command = "";        // コマンドを格納する変数
 
-void stopIfFault();
 int calcPotAngle(int potentiometerPin, int resetPin, String command);
 void activateCylinder(int pin);
 
 void setup() {
   Serial.begin(9600);
-  pinMode(limitSwitchUpperPin, INPUT);
-  pinMode(limitSwitchLowerPin, INPUT);
+  pinMode(limitSwitchUpperPin, INPUT_PULLUP);
+  pinMode(limitSwitchLowerPin, INPUT_PULLUP);
   pinMode(resetPin, INPUT_PULLUP);
+  pinMode(potentiometerPin, INPUT);
+  pinMode(motorExpandPin, OUTPUT);
+  pinMode(motorRetractPin, OUTPUT);
+  pinMode(armMotorExpandPin, OUTPUT);
+  pinMode(armMotorRetractPin, OUTPUT);
   pinMode(armOpenPin, OUTPUT);
   pinMode(armClosePin, OUTPUT);
   pinMode(boxArmExpandPin, OUTPUT);
   pinMode(boxArmRetractPin, OUTPUT);
   pinMode(mechaExpandPin, OUTPUT);
   pinMode(mechaRetractPin, OUTPUT);
-  md.init();
+  Serial.println("起動卍");
 }
 
 void loop() {
   int potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
+  // スイッチの状態を表示
+  int potValue = analogRead(potentiometerPin);
+  Serial.print("potValue: "); Serial.print(potValue);
+  Serial.print("limitSwitchUpperPin: "); Serial.print(digitalRead(limitSwitchUpperPin));
+  Serial.print(", limitSwitchLowerPin: "); Serial.print(digitalRead(limitSwitchLowerPin));
+  Serial.print(", resetPin: "); Serial.print(digitalRead(resetPin));
+  Serial.print(", potAngle: "); Serial.println(potAngle);
 
   if (Serial.available() > 0) {
     String command = Serial.readStringUntil('\n');
 
     if (command == "mechaExpand") {
-      Serial.println("動作開始: mechaExpand");
+      Serial.print("動作開始: mechaExpand");
       activateCylinder(mechaExpandPin);
-      Serial.println("動作完了: mechaExpand");
+      Serial.print("動作完了: mechaExpand");
     } else if (command == "mechaRetract") {
-      Serial.println("動作開始: mechaRetract");
+      Serial.print("動作開始: mechaRetract");
       activateCylinder(mechaRetractPin);
-      Serial.println("動作完了: mechaRetract");
+      Serial.print("動作完了: mechaRetract");
     } else if (command == "armOpen") {
-      Serial.println("動作開始: armOpen");
+      Serial.print("動作開始: armOpen");
       activateCylinder(armOpenPin);
-      Serial.println("動作完了: armOpen");
+      Serial.print("動作完了: armOpen");
     } else if (command == "armClose") {
-      Serial.println("動作開始: armClose");
+      Serial.print("動作開始: armClose");
       activateCylinder(armClosePin);
-      Serial.println("動作完了: armClose");
+      Serial.print("動作完了: armClose");
     } else if (command == "boxArmExpand") {
-      Serial.println("動作開始: boxArmExpand");
+      Serial.print("動作開始: boxArmExpand");
       activateCylinder(boxArmExpandPin);
-      Serial.println("動作完了: boxArmExpand");
+      Serial.print("動作完了: boxArmExpand");
     } else if (command == "boxArmRetract") {
-      Serial.println("動作開始: boxArmRetract");
+      Serial.print("動作開始: boxArmRetract");
       activateCylinder(boxArmRetractPin);
-      Serial.println("動作完了: boxArmRetract");
+      Serial.print("動作完了: boxArmRetract");
     }
     if (command == "moveUp") { // 上昇
-      Serial.println("moveUp");
-      // 上部リミットスイッチが押されるまでモーターを動かす
-      while (!digitalRead(limitSwitchUpperPin)) {
-        md.setM1Speed(400); // 速度を調整
-        stopIfFault();
+      if (digitalRead(limitSwitchUpperPin)){
+        Serial.print("moveUp");
+        // 上部リミットスイッチが押されるまでモーターを動かす
+        while (digitalRead(limitSwitchUpperPin)) {
+          analogWrite(motorExpandPin, expandSpeed); // 速度を調整
+          analogWrite(motorRetractPin, 0); // 速度を調整
+        }
+        Serial.print("moveUp end");
+        analogWrite(motorExpandPin, 0); // リミットスイッチが押されたら停止
+      } else {
+        Serial.print("can't moveUp because limitSwitchUpperPin is pressed");
       }
-      md.setM1Speed(0); // リミットスイッチが押されたら停止
+      command = "";
     } else if (command == "moveDown") { // 下降
-      Serial.println("moveDown");
-      // 下部リミットスイッチが押されるまでモーターを動かす
-      while (!digitalRead(limitSwitchLowerPin)) {
-        md.setM1Speed(-400); // 速度を調整
-        stopIfFault();
+      if (digitalRead(limitSwitchLowerPin)) {
+        Serial.print("moveDown");
+        // 下部リミットスイッチが押されるまでモーターを動かす
+        while (digitalRead(limitSwitchLowerPin)) {
+          analogWrite(motorRetractPin, expandSpeed); // 速度を調整
+          // analogWrite(motorRetractPin, 200); // 速度を調整
+          analogWrite(motorExpandPin, 0); // 速度を調整
+        }
+        Serial.print("moveDown end");
+        analogWrite(motorRetractPin, 0); // リミットスイッチが押されたら停止
+      } else {
+        Serial.print("can't moveDown because limitSwitchLowerPin is pressed");
       }
-      md.setM1Speed(0); // リミットスイッチが押されたら停止
+      command = "";
     }
     if (command == "expandArm" && potAngle > -10) { // 展開
-      Serial.print("expandArm, potAngle: "); Serial.println(potAngle);
+      Serial.print("expandArm");
       current_command = "expandArm";
       // ポテンショメータが-10度より小さくなるまでモーターを動かす
       while (potAngle > -10) {
         potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
-        md.setM1Speed(400); // 速度を調整
-        stopIfFault();
+        analogWrite(armMotorExpandPin, retractSpeed); // 速度を調整
+        analogWrite(armMotorRetractPin, 0);
       }
-      md.setM1Speed(0); // ポテンショメータが-10度より小さくなったら停止
+      Serial.print("expandArm end");
+      analogWrite(armMotorExpandPin, 0); // ポテンショメータが-10度より小さくなったら停止
       current_command = "";
     } else if (command == "contractArm") { // 収納
-      Serial.print("contractArm, potAngle: "); Serial.println(potAngle);
+      Serial.print("contractArm");
       current_command = "contractArm";
       // ポテンショメータが90度になるまでモーターを動かす
       while (-5 > (potAngle - 90) || (potAngle - 90) > 5) {
         potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
         if (potAngle > 90) {
-          md.setM1Speed(400); // 速度を調整
+          analogWrite(armMotorExpandPin, expandSpeed); // 速度を調整
+          analogWrite(armMotorRetractPin, 0);
         } else {
-          md.setM1Speed(-400); // 速度を調整
+          analogWrite(armMotorExpandPin, 0);
+          analogWrite(armMotorRetractPin, expandSpeed); // 速度を調整
         }
-        stopIfFault();
       }
-      md.setM1Speed(0); // ポテンショメータが90度になったら停止
+      Serial.print("contractArm end");
+      analogWrite(armMotorExpandPin, 0); // ポテンショメータが90度になったら停止
+      analogWrite(armMotorRetractPin, 0); // ポテンショメータが90度になったら停止
       current_command = "";
     } else if (command == "resetArm" && potAngle < 180){ // 初期位置へ移動
-      Serial.print("resetArm, potAngle: "); Serial.println(potAngle);
-      current_command = "resetArm";
-      while (potAngle < 180 || !digitalRead(resetPin)) {
-        potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
-        md.setM1Speed(-400); // 速度を調整
-        stopIfFault();
+      if (!digitalRead(limitSwitchUpperPin)) { // 上部リミットスイッチが押されている場合は初期位置へ移動
+        Serial.print("resetArm");
+        current_command = "resetArm";
+        while (potAngle < 180 || !digitalRead(resetPin)) {
+          potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
+          analogWrite(armMotorExpandPin, 0);
+          analogWrite(armMotorRetractPin, expandSpeed); // 速度を調整
+        }
+        Serial.print("resetArm end");
+        analogWrite(armMotorExpandPin, 0); // ポテンショメータが180度になったら停止
+        analogWrite(armMotorRetractPin, 0); // ポテンショメータが180度になったら停止
+        current_command = "";
+      } else {
+        Serial.print("can't resetArm because limitSwitchUpperPin is not pressed");
+        command = "";
       }
-      md.setM1Speed(0); // ポテンショメータが180度になったら停止
-      current_command = "";
     }
-  }
-}
-
-void stopIfFault() {
-  if (md.getM1Fault()) {
-    Serial.println("M1 fault");
-    while(1);
-  }
-  if (md.getM2Fault()) {
-    Serial.println("M2 fault");
-    while(1);
   }
 }
 
@@ -147,9 +180,9 @@ int calcPotAngle(int potentiometerPin, int resetPin, String command) {
       potAngle = 180 - (potAngle - base_angle);
     }
 
-    Serial.print("command: "); Serial.print(command);
-    Serial.print(", potValue: "); Serial.print(potValue);
-    Serial.print(", potAngle: "); Serial.println(potAngle);
+    // Serial.print("command: "); Serial.print(command);
+    // Serial.print(", potValue: "); Serial.print(potValue);
+    // Serial.print(", potAngle: "); Serial.println(potAngle);
     return potAngle;
 }
 
