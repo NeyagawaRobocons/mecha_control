@@ -23,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'mecha_control_node = mecha_control.mecha_control_node:main',
             'dummy_node = mecha_control.dummy_node:main',
             'debug_controller = mecha_control.debug_controller:main',
             'debug_sequence_controller = mecha_control.debug_sequence_controller:main',
