@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 # find_package(mecha_control REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -20,6 +22,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SensorStates.msg"
   "msg/ActuatorCommands.msg"
   "msg/MechaState.msg"
+  "msg/PointAndMechaState.msg"
+  "msg/PointAndMechaStateArray.msg"
 )
 
 # #-- for sequence_controller
@@ -60,6 +64,7 @@ install(PROGRAMS
   mecha_control/dummy_node.py
   mecha_control/debug_controller.py
   mecha_control/debug_sequence_controller.py
+  mecha_control/path_command_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 #--- end Python
