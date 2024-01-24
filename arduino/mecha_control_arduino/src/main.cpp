@@ -1,4 +1,11 @@
 #include <Arduino.h>
+#include <Servo.h> 
+Servo servoRight; // サーボモーターのインスタンスを作成
+Servo servoLeft; // サーボモーターのインスタンスを作成
+
+// サーボモーター制御用のピン
+const int servoPinRight = 35;             // サーボモーター用ピン
+const int servoPinLeft = 37;              // サーボモーター用ピン
 
 // 上下展開用のモーター制御用のピン
 const int motorExpandPin = 27;       // モーター展開用ピン
@@ -8,8 +15,8 @@ const int motorRetractPin = 29;      // モーター縮小用ピン
 const int armMotorExpandPin = 23;    // アームモーター展開用ピン
 const int armMotorRetractPin = 25;   // アームモーター縮小用ピン
 
-const int expandSpeed = 130;         // 展開時のモーターの速度
-const int retractSpeed = 130;        // 縮小時のモーターの速度
+const int expandSpeed = 128;         // 展開時のモーターの速度
+const int retractSpeed = 128;        // 縮小時のモーターの速度
 
 const int limitSwitchUpperPin = 3;  // 上部リミットスイッチ用ピン
 const int limitSwitchLowerPin = 5;  // 下部リミットスイッチ用ピン
@@ -45,6 +52,10 @@ void setup() {
   pinMode(boxArmRetractPin, OUTPUT);
   pinMode(mechaExpandPin, OUTPUT);
   pinMode(mechaRetractPin, OUTPUT);
+  servoRight.attach(servoPinRight); // サーボモーターのピンを指定
+  servoLeft.attach(servoPinLeft); // サーボモーターのピンを指定
+  servoRight.write(0); // サーボモーターを0度に動かす
+  servoLeft.write(0); // サーボモーターを0度に動かす
   Serial.println("起動卍");
 }
 
@@ -124,9 +135,14 @@ void loop() {
         potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
         analogWrite(armMotorExpandPin, retractSpeed); // 速度を調整
         analogWrite(armMotorRetractPin, 0);
+        // delay(10);
+        // analogWrite(armMotorExpandPin, retractSpeed); // 速度を調整
+        // analogWrite(armMotorRetractPin, retractSpeed);
+        // delay(100);
       }
       Serial.print("expandArm end");
-      analogWrite(armMotorExpandPin, 0); // ポテンショメータが-10度より小さくなったら停止
+      analogWrite(armMotorExpandPin, 250); // ポテンショメータが-10度より小さくなったら停止
+      analogWrite(armMotorRetractPin, 250);
       current_command = "";
     } else if (command == "contractArm") { // 収納
       Serial.print("contractArm");
@@ -137,14 +153,22 @@ void loop() {
         if (potAngle > 90) {
           analogWrite(armMotorExpandPin, expandSpeed); // 速度を調整
           analogWrite(armMotorRetractPin, 0);
+          // delay(10);
+          // analogWrite(armMotorExpandPin, 0); // 速度を調整
+          // analogWrite(armMotorRetractPin, 0);
+          // delay(100);
         } else {
           analogWrite(armMotorExpandPin, 0);
           analogWrite(armMotorRetractPin, expandSpeed); // 速度を調整
+          delay(10);
+          analogWrite(armMotorExpandPin, 0); // 速度を調整
+          analogWrite(armMotorRetractPin, 0);
+          delay(100);
         }
       }
       Serial.print("contractArm end");
-      analogWrite(armMotorExpandPin, 0); // ポテンショメータが90度になったら停止
-      analogWrite(armMotorRetractPin, 0); // ポテンショメータが90度になったら停止
+      analogWrite(armMotorExpandPin, 250); // ポテンショメータが90度になったら停止
+      analogWrite(armMotorRetractPin, 250); // ポテンショメータが90度になったら停止
       current_command = "";
     } else if (command == "resetArm" && potAngle < 180){ // 初期位置へ移動
       if (!digitalRead(limitSwitchUpperPin)) { // 上部リミットスイッチが押されている場合は初期位置へ移動
@@ -154,15 +178,28 @@ void loop() {
           potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
           analogWrite(armMotorExpandPin, 0);
           analogWrite(armMotorRetractPin, expandSpeed); // 速度を調整
+          // delay(10);
+          // analogWrite(armMotorExpandPin, 0);
+          // analogWrite(armMotorRetractPin, 0); // 速度を調整
+          // delay(100);
         }
         Serial.print("resetArm end");
-        analogWrite(armMotorExpandPin, 0); // ポテンショメータが180度になったら停止
-        analogWrite(armMotorRetractPin, 0); // ポテンショメータが180度になったら停止
+        analogWrite(armMotorExpandPin, 250); // ポテンショメータが180度になったら停止
+        analogWrite(armMotorRetractPin, 250); // ポテンショメータが180度になったら停止
         current_command = "";
       } else {
         Serial.print("can't resetArm because limitSwitchUpperPin is not pressed");
         command = "";
       }
+    } else if (command == "push" && potAngle < 0) { // 押し出し解放サーボを動かす。
+      Serial.print("push");
+      servoRight.write(0);
+      servoLeft.write(0);
+      delay(1000);
+      servoRight.write(90);
+      servoLeft.write(90);
+      delay(1000);
+      command = "";
     }
   }
 }
@@ -173,12 +210,12 @@ int calcPotAngle(int potentiometerPin, int resetPin, String command) {
     static int base_angle = 0; // 基準角度を保存する変数（staticで初期化）
     int potAngle = map(potValue, 0, 1023, 0, 300); // ポテンショメータの値を角度に変換
 
-    if (!digitalRead(resetPin)) { // リセットボタンが押されたら基準角度を更新
-      base_angle = potAngle;
-      potAngle = 180;
-    } else { // リセットボタンが押されていない場合は基準角度を考慮
-      potAngle = 180 - (potAngle - base_angle);
-    }
+    // if (!digitalRead(resetPin)) { // リセットボタンが押されたら基準角度を更新
+    //   base_angle = potAngle;
+    //   potAngle = 180;
+    // } else { // リセットボタンが押されていない場合は基準角度を考慮
+    potAngle = 180 - (potAngle - base_angle);
+    // }
 
     // Serial.print("command: "); Serial.print(command);
     // Serial.print(", potValue: "); Serial.print(potValue);
