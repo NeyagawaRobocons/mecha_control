@@ -36,6 +36,7 @@ layout = [
     [sg.Button('Move Up', key='moveUp'), sg.Button('Move Down', key='moveDown')],
     [sg.Button('Expand Arm', key='expandArm'), sg.Button('Contract Arm', key='contractArm')],
     [sg.Button('Reset Arm', key='resetArm'), sg.Button('push', key='push')],
+    [sg.Button('Servo 0', key='0degree'), sg.Button('Servo 90', key='90degree')],
     [sg.Text("台座機構コントロール", font=("Helvetica", 12))],
     [sg.Button('機構展開', key='mechaExpand'), sg.Button('機構格納', key='mechaRetract')],
     [sg.Button('箱のアーム展開', key='armOpen'), sg.Button('箱のアーム閉じる', key='armClose')],
@@ -55,7 +56,7 @@ while True:
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
 
-    if event in ('moveUp', 'moveDown', 'expandArm', 'contractArm', 'resetArm', 'push',
+    if event in ('moveUp', 'moveDown', 'expandArm', 'contractArm', 'resetArm', 'push', '0degree', '90degree',
                  'mechaExpand', 'mechaRetract', 'armOpen', 'armClose', 'boxArmExpand', 'boxArmRetract'):
         threading.Thread(target=send_command, args=(event,), daemon=True).start()
 

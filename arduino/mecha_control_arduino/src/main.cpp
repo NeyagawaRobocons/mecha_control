@@ -4,16 +4,16 @@ Servo servoRight; // サーボモーターのインスタンスを作成
 Servo servoLeft; // サーボモーターのインスタンスを作成
 
 // サーボモーター制御用のピン
-const int servoPinRight = 35;             // サーボモーター用ピン
-const int servoPinLeft = 37;              // サーボモーター用ピン
+const int servoPinRight = 11;             // サーボモーター用ピン
+const int servoPinLeft = 12;              // サーボモーター用ピン
 
 // 上下展開用のモーター制御用のピン
-const int motorExpandPin = 27;       // モーター展開用ピン
-const int motorRetractPin = 29;      // モーター縮小用ピン
+const int motorExpandPin = 10;       // モーター展開用ピン
+const int motorRetractPin = 9;      // モーター縮小用ピン
 
 // アーム展開用のモーター制御用のピン
-const int armMotorExpandPin = 23;    // アームモーター展開用ピン
-const int armMotorRetractPin = 25;   // アームモーター縮小用ピン
+const int armMotorExpandPin = 7;    // アームモーター展開用ピン
+const int armMotorRetractPin = 6;   // アームモーター縮小用ピン
 
 const int expandSpeed = 128;         // 展開時のモーターの速度
 const int retractSpeed = 128;        // 縮小時のモーターの速度
@@ -148,7 +148,7 @@ void loop() {
       Serial.print("contractArm");
       current_command = "contractArm";
       // ポテンショメータが90度になるまでモーターを動かす
-      while (-5 > (potAngle - 90) || (potAngle - 90) > 5) {
+      while (-1 > (potAngle - 90) || (potAngle - 90) > 1) {
         potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
         if (potAngle > 90) {
           analogWrite(armMotorExpandPin, expandSpeed); // 速度を調整
@@ -160,10 +160,10 @@ void loop() {
         } else {
           analogWrite(armMotorExpandPin, 0);
           analogWrite(armMotorRetractPin, expandSpeed); // 速度を調整
-          delay(10);
-          analogWrite(armMotorExpandPin, 0); // 速度を調整
-          analogWrite(armMotorRetractPin, 0);
-          delay(100);
+          // delay(10);
+          // analogWrite(armMotorExpandPin, 0); // 速度を調整
+          // analogWrite(armMotorRetractPin, 0);
+          // delay(100);
         }
       }
       Serial.print("contractArm end");
@@ -199,6 +199,16 @@ void loop() {
       servoRight.write(90);
       servoLeft.write(90);
       delay(1000);
+      command = "";
+    } else if (command == "0degree") {
+      Serial.print("0degree");
+      servoRight.write(0);
+      servoLeft.write(0);
+      command = "";
+    } else if (command == "90degree") {
+      Serial.print("90degree");
+      servoRight.write(90);
+      servoLeft.write(90);
       command = "";
     }
   }
