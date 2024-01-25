@@ -8,12 +8,12 @@ const int servoPinRight = 11;             // サーボモーター用ピン
 const int servoPinLeft = 12;              // サーボモーター用ピン
 
 // 上下展開用のモーター制御用のピン
-const int motorExpandPin = 10;       // モーター展開用ピン
-const int motorRetractPin = 9;      // モーター縮小用ピン
+const int motorExpandPin = 9;       // モーター展開用ピン
+const int motorRetractPin = 10;      // モーター縮小用ピン
 
 // アーム展開用のモーター制御用のピン
-const int armMotorExpandPin = 7;    // アームモーター展開用ピン
-const int armMotorRetractPin = 6;   // アームモーター縮小用ピン
+const int armMotorExpandPin = 6;    // アームモーター展開用ピン
+const int armMotorRetractPin = 7;   // アームモーター縮小用ピン
 
 const int expandSpeed = 128;         // 展開時のモーターの速度
 const int retractSpeed = 128;        // 縮小時のモーターの速度
