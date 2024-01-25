@@ -12,9 +12,9 @@ class DebugSequenceController(Node):
         # GUI Layout
         layout = [
             [sg.Text('台座機構コントロール')],
-            [sg.Button('台座展開', key='daiza_tenkai'), sg.Button('台座回収', key='daiza_kaishu'), sg.Button('台座設置', key='daiza_setti')],
+            [sg.Button('台座展開', key='daiza_tenkai'), sg.Button('台座回収', key='daiza_kaishu'), sg.Button('台座設置', key='daiza_setti'), sg.Button('台座格納', key='daiza_kakunou')],
             [sg.Text('人形機構コントロール')],
-            [sg.Button('人形準備', key='hina_junbi'), sg.Button('人形展開', key='hina_tenkai'), sg.Button('人形回収', key='hina_kaishu'), sg.Button('人形設置', key='hina_setti')],
+            [sg.Button('人形展開', key='hina_tenkai'), sg.Button('人形回収', key='hina_kaishu'), sg.Button('人形設置', key='hina_setti'), sg.Button('人形格納', key='hina_kakunou')],
             [sg.Text('ぼんぼり点灯コントロール')],
             [sg.Button('ぼんぼり点灯開始', key='bonbori_tento')]
         ]
@@ -43,14 +43,16 @@ class DebugSequenceController(Node):
                 msg.daiza_state = bytes([2])  # 回収
             elif event == 'daiza_setti':
                 msg.daiza_state = bytes([3])  # 設置
-            elif event == 'hina_junbi':
-                msg.hina_state = bytes([4])   # 準備
-            elif event == 'hina_tenkai':
+            elif event == 'daiza_kakunou':
+                msg.daiza_state = bytes([4])  # 格納
+            elif event == 'hina_kakunou':
                 msg.hina_state = bytes([1])   # 展開
             elif event == 'hina_kaishu':
                 msg.hina_state = bytes([2])   # 回収
             elif event == 'hina_setti':
                 msg.hina_state = bytes([3])   # 設置
+            elif event == 'hina_kakunou':
+                msg.hina_state = bytes([4])   # 格納
             elif event == 'bonbori_tento':
                 msg.daiza_state = bytes([0])
                 msg.hina_state = bytes([0])
