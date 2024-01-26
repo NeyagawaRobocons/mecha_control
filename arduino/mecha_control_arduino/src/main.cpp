@@ -34,7 +34,7 @@ const int mechaRetractPin = 53;     // 機構全体を縮小するピン
 String current_command = "";        // コマンドを格納する変数
 
 int calcPotAngle(int potentiometerPin, int resetPin, String command);
-void activateCylinder(int pin);
+void activateCylinder(int pin, int delayTime);
 
 void setup() {
   Serial.begin(9600);
@@ -74,27 +74,27 @@ void loop() {
 
     if (command == "mechaExpand") {
       Serial.print("動作開始: mechaExpand");
-      activateCylinder(mechaExpandPin);
+      activateCylinder(mechaExpandPin, 1000);
       Serial.print("動作完了: mechaExpand");
     } else if (command == "mechaRetract") {
       Serial.print("動作開始: mechaRetract");
-      activateCylinder(mechaRetractPin);
+      activateCylinder(mechaRetractPin, 1000);
       Serial.print("動作完了: mechaRetract");
     } else if (command == "armOpen") {
       Serial.print("動作開始: armOpen");
-      activateCylinder(armOpenPin);
+      activateCylinder(armOpenPin, 1000);
       Serial.print("動作完了: armOpen");
     } else if (command == "armClose") {
       Serial.print("動作開始: armClose");
-      activateCylinder(armClosePin);
+      activateCylinder(armClosePin, 2000);
       Serial.print("動作完了: armClose");
     } else if (command == "boxArmExpand") {
       Serial.print("動作開始: boxArmExpand");
-      activateCylinder(boxArmExpandPin);
+      activateCylinder(boxArmExpandPin, 1000);
       Serial.print("動作完了: boxArmExpand");
     } else if (command == "boxArmRetract") {
       Serial.print("動作開始: boxArmRetract");
-      activateCylinder(boxArmRetractPin);
+      activateCylinder(boxArmRetractPin, 1000);
       Serial.print("動作完了: boxArmRetract");
     }
     if (command == "moveUp") { // 上昇
@@ -130,8 +130,8 @@ void loop() {
     if (command == "expandArm" && potAngle > -10) { // 展開
       Serial.print("expandArm");
       current_command = "expandArm";
-      // ポテンショメータが-10度より小さくなるまでモーターを動かす
-      while (potAngle > -10) {
+      // ポテンショメータが-20度より小さくなるまでモーターを動かす
+      while (potAngle > -20) {
         potAngle = calcPotAngle(potentiometerPin, resetPin, current_command);
         analogWrite(armMotorExpandPin, retractSpeed); // 速度を調整
         analogWrite(armMotorRetractPin, 0);
@@ -233,8 +233,8 @@ int calcPotAngle(int potentiometerPin, int resetPin, String command) {
     return potAngle;
 }
 
-void activateCylinder(int pin) {
+void activateCylinder(int pin, int delayTime = 1000) {
   digitalWrite(pin, HIGH);
-  delay(1000);
+  delay(delayTime);
   digitalWrite(pin, LOW);
 }
