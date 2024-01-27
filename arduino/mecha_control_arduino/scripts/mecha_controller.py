@@ -3,7 +3,8 @@ import serial
 import threading
 from serial.tools import list_ports
 
-board_type = 'Arduino Mega 2560'
+# board_type = 'Arduino Mega 2560'
+board_type = 'ttyACM0'
 
 def find_arduino_uno_port(_board_type):
     """接続されているArduino UnoのCOMポートを見つける"""

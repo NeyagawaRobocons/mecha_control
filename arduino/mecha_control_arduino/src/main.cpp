@@ -1,5 +1,15 @@
 #include <Arduino.h>
 #include <Servo.h> 
+#include <Adafruit_NeoPixel.h>
+#include <avr/power.h>
+
+#define PIN            23
+#define NUMPIXELS      37
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+uint32_t tmp_color= pixels.Color(0, 0, 0);
+
 Servo servoRight; // サーボモーターのインスタンスを作成
 Servo servoLeft; // サーボモーターのインスタンスを作成
 
@@ -56,6 +66,9 @@ void setup() {
   servoLeft.attach(servoPinLeft); // サーボモーターのピンを指定
   servoRight.write(0); // サーボモーターを0度に動かす
   servoLeft.write(0); // サーボモーターを0度に動かす
+  pixels.begin();
+  pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+  pixels.show();
   Serial.println("起動卍");
 }
 
@@ -86,7 +99,7 @@ void loop() {
       Serial.print("動作完了: armOpen");
     } else if (command == "armClose") {
       Serial.print("動作開始: armClose");
-      activateCylinder(armClosePin, 2000);
+      activateCylinder(armClosePin, 1000);
       Serial.print("動作完了: armClose");
     } else if (command == "boxArmExpand") {
       Serial.print("動作開始: boxArmExpand");
@@ -213,6 +226,14 @@ void loop() {
     }
     if (command == "bonbori") {
       Serial.println("bonbori");
+      tmp_color = pixels.Color(255, 192, 203);
+      for(int i=0; i<NUMPIXELS; i++) {pixels.setPixelColor(i, tmp_color);}
+      pixels.show();
+    } else if (command == "bonboriOff") {
+      Serial.println("bonboriOff");
+      tmp_color = pixels.Color(0, 0, 0);
+      for(int i=0; i<NUMPIXELS; i++) {pixels.setPixelColor(i, tmp_color);}
+      pixels.show();
     }
   }
 }

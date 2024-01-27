@@ -28,7 +28,7 @@ bool bonbori_state
 下降モータを動かす：moveDown
 アームを展開する：expandArm
 アームを格納する：contractArm
-開放モータを動かす：open
+開放モータを動かす：push
 
 """
 
@@ -44,7 +44,7 @@ bool bonbori_state
 # 人形機構
 人形展開：expandArm, delay(1 sec), moveDown
 人形回収：contractArm, delay(1 sec), moveUp
-人形設置：expandArm, delay(1 sec), open, delay(1 sec), contractArm
+人形設置：expandArm, delay(1 sec), push
 人形格納：contractArm
 
 """
@@ -57,9 +57,11 @@ import PySimpleGUI as sg
 import serial
 import threading
 from serial.tools import list_ports
+import time
 
 # board_type = 'Arduino Mega 2560'
-board_type = 'Arduino Uno'
+# board_type = 'Arduino Uno'
+board_type = 'ttyACM0'
 
 def find_arduino_uno_port(_board_type):
     """接続されているArduino UnoのCOMポートを見つける"""
@@ -141,7 +143,8 @@ class MechaControlNode(Node):
         elif msg.hina_state == bytes([3]):
             self.hina_setti()
         elif msg.hina_state == bytes([4]):
-            self.hina_kakunou()
+            # self.hina_kakunou()
+            pass
         if msg.bonbori_state == True:
             self.bonbori_tento()
 
@@ -180,8 +183,8 @@ class MechaControlNode(Node):
     def hina_setti(self):
         self.get_logger().info('hina_setti')
         send_command('expandArm')
-        send_command('open')
-        send_command('contractArm')
+        time.sleep(1)
+        send_command('push')
 
     def bonbori_tento(self):
         self.get_logger().info('bonbori_tento')

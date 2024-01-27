@@ -2,12 +2,14 @@
 import rclpy
 from rclpy.node import Node
 from mecha_control.msg import MechaState
+from std_msgs.msg import String
 import PySimpleGUI as sg
 
 class DebugSequenceController(Node):
     def __init__(self):
         super().__init__('debug_sequence_controller')
         self.publisher = self.create_publisher(MechaState, '/mecha_state', 10)
+        self.direct_publisher = self.create_publisher(String, '/direct_mecha_command', 10)
 
         # GUI Layout
         layout = [
@@ -16,7 +18,9 @@ class DebugSequenceController(Node):
             [sg.Text('人形機構コントロール')],
             [sg.Button('人形展開(4)', key='hina_tenkai'), sg.Button('人形回収(5)', key='hina_kaishu'), sg.Button('人形設置(6)', key='hina_setti'), sg.Button('人形格納(7)', key='hina_kakunou')],
             [sg.Text('ぼんぼり点灯コントロール')],
-            [sg.Button('ぼんぼり点灯開始(8)', key='bonbori_tento')]
+            [sg.Button('ぼんぼり点灯開始(8)', key='bonbori_tento'), sg.Button('ぼんぼり点灯終了(9)', key='bonboriOff')],
+            [sg.Text('直接servoコントロール')],
+            [sg.Button('0度(0)', key='0degree'), sg.Button('90度(1)', key='90degree')],
         ]
 
         # Create the window
@@ -37,6 +41,9 @@ class DebugSequenceController(Node):
 
             # Create MechaState message
             msg = MechaState()
+            msg.daiza_state = bytes([0])
+            msg.hina_state = bytes([0])
+            msg.bonbori_state = False
             if event == 'daiza_tenkai' or event == '1:10':
                 msg.daiza_state = bytes([1])  # 展開
             elif event == 'daiza_kaishu' or event == '2:11':
@@ -45,7 +52,7 @@ class DebugSequenceController(Node):
                 msg.daiza_state = bytes([3])  # 設置
             elif event == 'daiza_kakunou' or event == '4:13':
                 msg.daiza_state = bytes([4])  # 格納
-            elif event == 'hina_kakunou' or event == '5:14':
+            elif event == 'hina_tenkai' or event == '5:14':
                 msg.hina_state = bytes([1])   # 展開
             elif event == 'hina_kaishu' or event == '6:15':
                 msg.hina_state = bytes([2])   # 回収
@@ -57,6 +64,15 @@ class DebugSequenceController(Node):
                 msg.daiza_state = bytes([0])
                 msg.hina_state = bytes([0])
                 msg.bonbori_state = True      # 点灯開始
+            elif event == 'bonboriOff' or event == '0:19':
+                """
+                ros2 topic pub /direct_mecha_command std_msgs/msg/String "{data: "bonboriOff"}"
+                """
+                self.direct_publisher.publish(String(data="bonboriOff"))
+            elif event == '0degree' or event == '1:20':
+                self.direct_publisher.publish(String(data="0degree"))
+            elif event == '90degree' or event == '2:21':
+                self.direct_publisher.publish(String(data="90degree"))
 
             # Publish the message
             self.publisher.publish(msg)
