@@ -211,6 +211,9 @@ void loop() {
       servoLeft.write(90);
       command = "";
     }
+    if (command == "bonbori") {
+      Serial.println("bonbori");
+    }
   }
 }
 

@@ -51,6 +51,7 @@ bool bonbori_state
 
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 from mecha_control.msg import MechaState
 import PySimpleGUI as sg
 import serial
@@ -58,7 +59,7 @@ import threading
 from serial.tools import list_ports
 
 # board_type = 'Arduino Mega 2560'
-board_type = 'ttyACM0'
+board_type = 'Arduino Uno'
 
 def find_arduino_uno_port(_board_type):
     """接続されているArduino UnoのCOMポートを見つける"""
@@ -110,8 +111,15 @@ class MechaControlNode(Node):
         # メカ制御の状態をsubscribe
         self.subscription_ = self.create_subscription(
             MechaState, '/mecha_state', self.mecha_state_callback, 10)
-        
+        self.direct_subscription = self.create_subscription(
+            String, '/direct_mecha_command', self.direct_callback, 10)
         self.subscription_  # prevent unused variable warning
+        self.direct_subscription
+
+    def direct_callback(self, msg):
+        if msg.data is not None:
+            send_command(msg.data)
+            self.get_logger().info(f"direct control: {msg.data}")
 
     def mecha_state_callback(self, msg):
         # # メカ制御の状態を表示
@@ -161,15 +169,23 @@ class MechaControlNode(Node):
     
     def hina_tenkai(self):
         self.get_logger().info('hina_tenkai')
+        send_command('expandArm')
+        send_command('moveDown')
 
     def hina_kaishu(self):
         self.get_logger().info('hina_kaishu')
+        send_command('contractArm')
+        send_command('moveUp')
 
     def hina_setti(self):
         self.get_logger().info('hina_setti')
+        send_command('expandArm')
+        send_command('open')
+        send_command('contractArm')
 
     def bonbori_tento(self):
         self.get_logger().info('bonbori_tento')
+        send_command('bonbori')
 
 def main(args=None):
     rclpy.init(args=args)
