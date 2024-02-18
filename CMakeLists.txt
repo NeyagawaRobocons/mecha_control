@@ -24,37 +24,42 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MechaState.msg"
   "msg/PointAndMechaState.msg"
   "msg/PointAndMechaStateArray.msg"
+  "srv/MechCmd.srv"
+  "action/MechCmd.action"
 )
 
-# #-- for sequence_controller
-# add_executable(sequence_controller
-#   src/sequence_controller.cpp
-# )
-# target_include_directories(sequence_controller PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
-#   $<INSTALL_INTERFACE:include>
-# )
-# ament_target_dependencies(sequence_controller
-#   rclcpp
-#   # mecha_control
-#   rosidl_default_generators
-# )
-# install(TARGETS sequence_controller
-#   DESTINATION lib/${PROJECT_NAME}
-# )
-# #-- end sequence_controller
+#-- for sequence_controller
+find_package(mecha_control REQUIRED)
+find_package(std_srvs REQUIRED)
+add_executable(cmd_seq
+  src/cmd_seq.cpp
+)
+target_include_directories(cmd_seq PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(cmd_seq
+  rclcpp
+  mecha_control
+  std_srvs
+  rosidl_default_generators
+)
+install(TARGETS cmd_seq
+  DESTINATION lib/${PROJECT_NAME}
+)
+#-- end sequence_controller
 
-# if(BUILD_TESTING)
-#   find_package(ament_lint_auto REQUIRED)
-#   # the following line skips the linter which checks for copyrights
-#   # comment the line when a copyright and license is added to all source files
-#   set(ament_cmake_copyright_FOUND TRUE)
-#   # the following line skips cpplint (only works in a git repo)
-#   # comment the line when this package is in a git repo and when
-#   # a copyright and license is added to all source files
-#   set(ament_cmake_cpplint_FOUND TRUE)
-#   ament_lint_auto_find_test_dependencies()
-# endif()
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 #-- for Python
 # ament_python_install_package(${PROJECT_NAME})
