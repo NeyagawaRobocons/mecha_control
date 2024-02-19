@@ -1,4 +1,4 @@
-#request constants
+#goal constants
 uint8 STOP=0
 uint8 READY=1
 uint8 EXPAND=2
@@ -10,17 +10,17 @@ uint8 CLAMP_AND_CONTRACT=7
 uint8 EXPAND_AND_PLACE=8
 uint8 EXPAND_AND_PLACE_AND_CONTRACT=9
 
-#request fields
+#goal fields
 uint8 command
 
 ---
-#response constants
+#result constants
 uint8 OK=0
 uint8 ABORTED=1
 uint8 ERR_UNEXPECTED_ARG=2
 uint8 ERR_CANNOT_PROCESS=3
 
-#response fields
+#result fields
 uint8 result
 
 ---
