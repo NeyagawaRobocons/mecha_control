@@ -1,0 +1,39 @@
+#goal constants
+uint8 STOP=0
+uint8 READY=1
+uint8 UP=2
+uint8 DOWN=3
+uint8 POS_CARRY=4
+uint8 POS_TAKE=5
+uint8 POS_PLACE=6
+uint8 GUIDE_EXPAND=7
+uint8 GUIDE_CONTRACT=8
+uint8 LATCH_UNLOCK=9
+uint8 LATCH_UNLOCK_1=10
+uint8 LATCH_UNLOCK_2=11
+uint8 DOWN_AND_TAKE=12
+uint8 UP_AND_CARRY=13
+uint8 UP_AND_PLACE=14
+
+#goal fields
+uint8 command
+
+---
+#result constants
+uint8 OK=0
+uint8 ABORTED=1
+uint8 ERR_UNEXPECTED_ARG=2
+uint8 ERR_CANNOT_PROCESS=3
+
+#result fields
+uint8 result
+
+---
+#feedback constants
+uint8 STOPPING=0
+uint8 PREV_ACTION_ABORTED=1
+uint8 DOWN_AT_DOWN_AND_TAKE=2
+uint8 UP_AT_UP_AND_PLACE=3
+
+#feedback fields
+uint8 feedback

@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -26,6 +27,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PointAndMechaStateArray.msg"
   "srv/MechCmd.srv"
   "action/MechCmd.action"
+  "action/DaizaCmd.action"
+  "action/HinaCmd.action"
 )
 
 #-- for sequence_controller
@@ -40,6 +43,7 @@ target_include_directories(cmd_seq PUBLIC
 )
 ament_target_dependencies(cmd_seq
   rclcpp
+  rclcpp_action
   mecha_control
   std_srvs
   rosidl_default_generators
