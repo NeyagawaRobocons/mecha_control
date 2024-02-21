@@ -13,10 +13,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-# find_package(mecha_control REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(std_srvs REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -31,9 +28,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/HinaCmd.action"
 )
 
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 #-- for sequence_controller
-find_package(mecha_control REQUIRED)
-find_package(std_srvs REQUIRED)
+# find_package(mecha_control REQUIRED)
 add_executable(cmd_seq
   src/cmd_seq.cpp
 )
@@ -41,10 +39,10 @@ target_include_directories(cmd_seq PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
   $<INSTALL_INTERFACE:include>
 )
+target_link_libraries(cmd_seq "${cpp_typesupport_target}")
 ament_target_dependencies(cmd_seq
   rclcpp
   rclcpp_action
-  mecha_control
   std_srvs
   rosidl_default_generators
 )
