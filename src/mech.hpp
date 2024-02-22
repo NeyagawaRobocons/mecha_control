@@ -38,14 +38,14 @@ public:
         bool launch_hina_2 = 0;
     };
 
-    template<class _Node>
-    Mech(_Node *node){
-        this->daiza_pub_ = node->create_publisher<mecha_control::msg::ActuatorCommands>("daiza_clamp", 10);
-        this->hina_pub_ = node->create_publisher<mecha_control::msg::ActuatorCommands>("hina_dastpan", 10);
-        this->daiza_sensor_sub_ = node->create_subscription<mecha_control::msg::SensorStates>(
-            "daiza_state", 10, std::bind(&Mech::daiza_sensor_callback, node, std::placeholders::_1));
-        this->hina_sensor_sub_  = node->create_subscription<mecha_control::msg::SensorStates>(
-            "hina_state", 10, std::bind(&Mech::hina_sensor_callback, node, std::placeholders::_1));
+    template<typename NodeT>
+    Mech(NodeT && node) : daiza_mutex(), hina_mutex(){
+        this->daiza_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "daiza_clamp", 10);
+        this->hina_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "hina_dastpan", 10);
+        this->daiza_sensor_sub_ = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
+            node, "daiza_state", 10, std::bind(&Mech::daiza_sensor_callback, node, std::placeholders::_1));
+        this->hina_sensor_sub_  = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
+            node, "hina_state", 10, std::bind(&Mech::hina_sensor_callback, node, std::placeholders::_1));
     }
     struct DaizaState get_daiza(){
         this->daiza_mutex.lock();

@@ -21,10 +21,9 @@ public:
     using GoalHandleDaizaCmd = rclcpp_action::ServerGoalHandle<DaizaCmd>;
     using HinaCmd = mecha_control::action::HinaCmd;
     using GoalHandleHinaCmd = rclcpp_action::ServerGoalHandle<HinaCmd>;
-    MechSeqNode()
-    : Node("mech_cmd_seq_node")
+    MechSeqNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+    : rclcpp::Node("mech_cmd_seq_node", options), mech(*this)
     {
-        this->mech = Mech(this);
         using namespace std::placeholders;
         this->daiza_action_server = rclcpp_action::create_server<DaizaCmd>(
             this,
@@ -89,24 +88,24 @@ private:
                 RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::STOP OK");
                 return;
                 break;
-            case DaizaCmd::Goal::READY:
-                struct DaizaActuator act;
+            case DaizaCmd::Goal::READY:{
+                Mech::DaizaActuator act;
                 act.expand = 0;
                 act.clamp  = 1;
                 act.guide_close = 1;
                 mech.set_daiza(act);
 
-                struct DaizaState state = get_daiza();
+                auto state = this->mech.get_daiza();
                 if(state.is_expand == 0 && state.is_clamp == 1 && state.is_guide_close == 1){
                     result->result = DaizaCmd::Result::OK;
                     goal_handle->succeed(result);
                     RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::READY OK");
                     return;
                 }
-                break;
-            case DaizaCmd::Goal::EXPAND:
-                struct DaizaState state = get_daiza();
-                struct DaizaActuator act;
+                break;}
+            case DaizaCmd::Goal::EXPAND:{
+                Mech::DaizaState state = this->mech.get_daiza();
+                Mech::DaizaActuator act;
                 act.expand = 1;
                 act.clamp  = state.is_clamp;
                 act.guide_close = state.is_guide_close;
@@ -118,10 +117,10 @@ private:
                     RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::EXPAND OK");
                     return;
                 }
-                break;
-            case DaizaCmd::Goal::CONTRACT:
-                struct DaizaState state = get_daiza();
-                struct DaizaActuator act;
+                break;}
+            case DaizaCmd::Goal::CONTRACT:{
+                Mech::DaizaState state = this->mech.get_daiza();
+                Mech::DaizaActuator act;
                 act.expand = 0;
                 act.clamp  = state.is_clamp;
                 act.guide_close = state.is_guide_close;
@@ -133,10 +132,10 @@ private:
                     RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::CONTRACT OK");
                     return;
                 }
-                break;
-            case DaizaCmd::Goal::CLAMP:
-                struct DaizaState state = get_daiza();
-                struct DaizaActuator act;
+                break;}
+            case DaizaCmd::Goal::CLAMP:{
+                Mech::DaizaState state = this->mech.get_daiza();
+                Mech::DaizaActuator act;
                 act.expand = state.is_expand;
                 act.clamp  = 1;
                 act.guide_close = state.is_guide_close;
@@ -148,10 +147,10 @@ private:
                     RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::CLAMP OK");
                     return;
                 }
-                break;
-            case DaizaCmd::Goal::UNCLAMP:
-                struct DaizaState state = get_daiza();
-                struct DaizaActuator act;
+                break;}
+            case DaizaCmd::Goal::UNCLAMP:{
+                Mech::DaizaState state = this->mech.get_daiza();
+                Mech::DaizaActuator act;
                 act.expand = state.is_expand;
                 act.clamp  = 0;
                 act.guide_close = state.is_guide_close;
@@ -163,11 +162,11 @@ private:
                     RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::UNCLAMP OK");
                     return;
                 }
-                break;
-            case DaizaCmd::Goal::EXPAND_AND_UNCLAMP:
+                break;}
+            case DaizaCmd::Goal::EXPAND_AND_UNCLAMP:{
                 if(step == 0){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = state.is_clamp;
                     act.guide_close = state.is_guide_close;
@@ -180,8 +179,8 @@ private:
                         step++;
                     }
                 }else if(step == 1){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = 0;
                     act.guide_close = 0;
@@ -194,11 +193,11 @@ private:
                         return;
                     }
                 }
-                break;
-            case DaizaCmd::Goal::CLAMP_AND_CONTRACT:
+                break;}
+            case DaizaCmd::Goal::CLAMP_AND_CONTRACT:{
                 if(step == 0){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = state.is_expand;
                     act.clamp  = state.is_clamp;
                     act.guide_close = 1;
@@ -211,8 +210,8 @@ private:
                         step++;
                     }
                 }else if(step == 1){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = state.is_expand;
                     act.clamp  = 1;
                     act.guide_close = 1;
@@ -225,8 +224,8 @@ private:
                         step++;
                     }
                 }else if(step == 2){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 0;
                     act.clamp  = 1;
                     act.guide_close = 1;
@@ -239,11 +238,11 @@ private:
                         return;
                     }
                 }
-                break;
-            case DaizaCmd::Goal::EXPAND_AND_PLACE:
+                break;}
+            case DaizaCmd::Goal::EXPAND_AND_PLACE:{
                 if(step == 0){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = state.is_clamp;
                     act.guide_close = state.is_guide_close;
@@ -256,8 +255,8 @@ private:
                         step++;
                     }
                 }else if(step == 1){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = 0;
                     act.guide_close = state.is_guide_close;
@@ -270,11 +269,11 @@ private:
                         return;
                     }
                 }
-                break;
-            case DaizaCmd::Goal::EXPAND_AND_PLACE_AND_CONTRACT:
+                break;}
+            case DaizaCmd::Goal::EXPAND_AND_PLACE_AND_CONTRACT:{
                 if(step == 0){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = state.is_clamp;
                     act.guide_close = state.is_guide_close;
@@ -287,8 +286,8 @@ private:
                         step++;
                     }
                 }else if(step == 1){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 1;
                     act.clamp  = 0;
                     act.guide_close = state.is_guide_close;
@@ -301,8 +300,8 @@ private:
                         step++;
                     }
                 }else if(step == 2){
-                    struct DaizaState state = get_daiza();
-                    struct DaizaActuator act;
+                    Mech::DaizaState state = this->mech.get_daiza();
+                    Mech::DaizaActuator act;
                     act.expand = 0;
                     act.clamp  = 0;
                     act.guide_close = state.is_guide_close;
@@ -315,12 +314,12 @@ private:
                         return;
                     }
                 }
-                break;
-            default:
+                break;}
+            default:{
                 result->result = DaizaCmd::Result::ERR_UNEXPECTED_ARG;
                 goal_handle->succeed(result);
                 RCLCPP_INFO(this->get_logger(), "ERR_UNEXPECTED_ARG");
-                return;
+                return;}
             }
             RCLCPP_INFO(this->get_logger(), "loop: %d", i);
             loop.sleep();
