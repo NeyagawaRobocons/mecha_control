@@ -34,7 +34,8 @@ uint8 result
 uint8 STOPPING=0
 uint8 PREV_ACTION_ABORTED=1
 uint8 DOWN_AT_DOWN_AND_TAKE=2
-uint8 UP_AT_UP_AND_PLACE=3
+uint8 UP_AT_UP_AND_CARRY=3
+uint8 UP_AT_UP_AND_PLACE=4
 
 #feedback fields
 uint8 feedback

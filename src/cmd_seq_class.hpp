@@ -1,7 +1,6 @@
 #pragma once
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "mecha_control/srv/mech_cmd.hpp"
 #include "mecha_control/action/mech_cmd.hpp"
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
@@ -31,6 +30,12 @@ public:
             std::bind(&MechSeqNode::daiza_handle_goal, this, _1, _2),
             std::bind(&MechSeqNode::daiza_handle_cancel, this, _1),
             std::bind(&MechSeqNode::daiza_handle_accepted, this, _1));
+        this->hina_action_server = rclcpp_action::create_server<HinaCmd>(
+            this,
+            "hina_cmd",
+            std::bind(&MechSeqNode::hina_handle_goal, this, _1, _2),
+            std::bind(&MechSeqNode::hina_handle_cancel, this, _1),
+            std::bind(&MechSeqNode::hina_handle_accepted, this, _1));
         bonbori_service = this->create_service<std_srvs::srv::SetBool>(
             "set_bonbori", std::bind(&MechSeqNode::set_bonbori_callback, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "node started");
@@ -39,20 +44,22 @@ public:
 private:
     Mech mech;
     rclcpp_action::Server<DaizaCmd>::SharedPtr daiza_action_server;
+    rclcpp_action::Server<HinaCmd>::SharedPtr hina_action_server;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr bonbori_service;
 
+    //daiza action
     rclcpp_action::GoalResponse daiza_handle_goal(
         const rclcpp_action::GoalUUID & uuid,
         std::shared_ptr<const DaizaCmd::Goal> goal)
     {
-        RCLCPP_INFO(this->get_logger(), "Received goal request with order %d", goal->command);
+        RCLCPP_INFO(this->get_logger(), "Received daiza goal request with order %d", goal->command);
         (void)uuid;
         return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     }
     rclcpp_action::CancelResponse daiza_handle_cancel(
         const std::shared_ptr<GoalHandleDaizaCmd> goal_handle)
     {
-        RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+        RCLCPP_INFO(this->get_logger(), "Received request to cancel daiza goal");
         (void)goal_handle;
         return rclcpp_action::CancelResponse::ACCEPT;
     }
@@ -62,6 +69,31 @@ private:
         // this needs to return quickly to avoid blocking the executor, so spin up a new thread
         std::thread{std::bind(&MechSeqNode::daiza_cmd_execute, this, _1), goal_handle}.detach();
     }
+    // hina action
+    rclcpp_action::GoalResponse hina_handle_goal(
+        const rclcpp_action::GoalUUID & uuid,
+        std::shared_ptr<const HinaCmd::Goal> goal)
+    {
+        RCLCPP_INFO(this->get_logger(), "Received hina goal request with order %d", goal->command);
+        (void)uuid;
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    }
+
+    rclcpp_action::CancelResponse hina_handle_cancel(
+        const std::shared_ptr<GoalHandleHinaCmd> goal_handle)
+    {
+        RCLCPP_INFO(this->get_logger(), "Received request to cancel hina goal");
+        (void)goal_handle;
+        return rclcpp_action::CancelResponse::ACCEPT;
+    }
+    void hina_handle_accepted(const std::shared_ptr<GoalHandleHinaCmd> goal_handle)
+    {
+        using namespace std::placeholders;
+        // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+        std::thread{std::bind(&MechSeqNode::hina_cmd_execute, this, _1), goal_handle}.detach();
+    }
+
+    // daiza action execute
     void daiza_cmd_execute(const std::shared_ptr<GoalHandleDaizaCmd> goal_handle)
     {
         RCLCPP_INFO(this->get_logger(), "Executing goal");
@@ -95,7 +127,7 @@ private:
                 act.guide_close = 1;
                 mech.set_daiza(act);
 
-                auto state = this->mech.get_daiza();
+                Mech::DaizaState state = this->mech.get_daiza();
                 if(state.is_expand == 0 && state.is_clamp == 1 && state.is_guide_close == 1){
                     result->result = DaizaCmd::Result::OK;
                     goal_handle->succeed(result);
@@ -324,9 +356,353 @@ private:
             RCLCPP_INFO(this->get_logger(), "loop: %d", i);
             loop.sleep();
         }
-
         
         result->result = DaizaCmd::Result::ERR_TIMEOUT;
+        goal_handle->succeed(result);
+        RCLCPP_INFO(this->get_logger(), "ERR_TIMEOUT");
+    }
+
+        // hina action execute
+    void hina_cmd_execute(const std::shared_ptr<GoalHandleHinaCmd> goal_handle)
+    {
+        RCLCPP_INFO(this->get_logger(), "Executing hina goal");
+        rclcpp::Rate loop_rate(1);
+        const auto goal = goal_handle->get_goal();
+        auto feedback = std::make_shared<HinaCmd::Feedback>();
+        auto result = std::make_shared<HinaCmd::Result>();
+
+        rclcpp::WallRate loop(0.1);
+        u_int8_t step = 0;
+        for (int i = 0; i < 100 && rclcpp::ok(); i++) {
+            // Check if there is a cancel request
+            if (goal_handle->is_canceling()) {
+                result->result = HinaCmd::Result::ABORTED;
+                goal_handle->canceled(result);
+                RCLCPP_INFO(this->get_logger(), "Goal canceled");
+                return;
+            }
+            switch (goal->command)
+            {
+            case HinaCmd::Goal::STOP:
+                result->result = HinaCmd::Result::OK;
+                goal_handle->succeed(result);
+                RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::STOP OK");
+                return;
+                break;
+            case HinaCmd::Goal::READY:{
+                Mech::HinaActuator act;
+                act.angle = - 1.5707963267949;
+                act.up  = 0;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                Mech::HinaState state = this->mech.get_hina();
+                if(
+                    (state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1) && 
+                    state.is_down == 1
+                ){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::READY OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::UP:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = 1;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.is_up == 1){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::UP OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::DOWN:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = 0;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.is_down == 1){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::DOWN OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::POS_CARRY:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = - 1.5707963267949;
+                act.up  = !state.is_down;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::POS_CARRY OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::POS_TAKE:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = 0.0;
+                act.up  = !state.is_down;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::POS_TAKE OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::POS_PLACE:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = 0.5235987755983;
+                act.up  = !state.is_down;
+                act.guide_expand = 1;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::POS_PLACE OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::GUIDE_EXPAND:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = !state.is_down;
+                act.guide_expand = 1;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(i > 5){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::GUIDE_EXPAND OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::GUIDE_CONTRACT:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = !state.is_down;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(i > 5){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::GUIDE_CONTRACT OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::LATCH_UNLOCK:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = !state.is_down;
+                act.guide_expand = 1;
+                act.launch_hina_1 = 1;
+                act.launch_hina_2 = 1;
+                mech.set_hina(act);
+
+                if(state.launched_hina_1 == 1 && state.launched_hina_2 == 1){
+                    act.angle = state.angle;
+                    act.up  = !state.is_down;
+                    act.guide_expand = 1;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::LATCH_UNLOCK OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::LATCH_UNLOCK_1:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = !state.is_down;
+                act.guide_expand = 1;
+                act.launch_hina_1 = 1;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                if(state.launched_hina_1 == 1){
+                    act.angle = state.angle;
+                    act.up  = !state.is_down;
+                    act.guide_expand = 1;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::LATCH_UNLOCK_1 OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::LATCH_UNLOCK_2:{
+                Mech::HinaState state = this->mech.get_hina();
+                Mech::HinaActuator act;
+                act.angle = state.angle;
+                act.up  = !state.is_down;
+                act.guide_expand = 1;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 1;
+                mech.set_hina(act);
+
+                if(state.launched_hina_2 == 1){
+                    act.angle = state.angle;
+                    act.up  = !state.is_down;
+                    act.guide_expand = 1;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::LATCH_UNLOCK_2 OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::DOWN_AND_TAKE:{
+                Mech::HinaActuator act;
+                act.angle = 0.0;
+                act.up  = 0;
+                act.guide_expand = 0;
+                act.launch_hina_1 = 0;
+                act.launch_hina_2 = 0;
+                mech.set_hina(act);
+
+                Mech::HinaState state = this->mech.get_hina();
+                if(state.is_down == 1){
+                    feedback->feedback = HinaCmd::Feedback::DOWN_AT_DOWN_AND_TAKE;
+                    goal_handle->publish_feedback(feedback);
+                    RCLCPP_INFO(this->get_logger(), "DOWN_AT_DOWN_AND_TAKE");
+                }
+                if(
+                    (state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1) && 
+                    state.is_down == 1
+                ){
+                    result->result = HinaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::DOWN_AND_TAKE OK");
+                    return;
+                }
+                break;}
+            case HinaCmd::Goal::UP_AND_CARRY:{
+                if(step == 0){
+                    Mech::HinaState state = this->mech.get_hina();
+                    Mech::HinaActuator act;
+                    act.angle = - 1.5707963267949;
+                    act.up  = !state.is_down;
+                    act.guide_expand = 0;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+
+                    if(state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1){
+                        feedback->feedback = HinaCmd::Feedback::UP_AT_UP_AND_CARRY;
+                        goal_handle->publish_feedback(feedback);
+                        RCLCPP_INFO(this->get_logger(), "UP_AT_UP_AND_CARRY");
+                        step++;
+                    }
+                }else if(step == 1){
+                    Mech::HinaState state = this->mech.get_hina();
+                    Mech::HinaActuator act;
+                    act.angle = - 1.5707963267949;
+                    act.up  = 1;
+                    act.guide_expand = 0;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+
+                    if(state.is_up == 1){
+                        result->result = HinaCmd::Result::OK;
+                        goal_handle->succeed(result);
+                        RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::UP_AND_CARRY OK");
+                        return;
+                    }
+                }
+                break;}
+            case HinaCmd::Goal::UP_AND_PLACE:{
+                if(step == 0){
+                    Mech::HinaState state = this->mech.get_hina();
+                    Mech::HinaActuator act;
+                    act.angle = - 0.5235987755983;
+                    act.up  = 1;
+                    act.guide_expand = 1;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+
+                    if(state.is_up == 1){
+                        feedback->feedback = HinaCmd::Feedback::UP_AT_UP_AND_PLACE;
+                        goal_handle->publish_feedback(feedback);
+                        RCLCPP_INFO(this->get_logger(), "UP_AT_UP_AND_PLACE");
+                        step++;
+                    }
+                }else if(step == 1){
+                    Mech::HinaState state = this->mech.get_hina();
+                    Mech::HinaActuator act;
+                    act.angle = 0.5235987755983;
+                    act.up  = 1;
+                    act.guide_expand = 1;
+                    act.launch_hina_1 = 0;
+                    act.launch_hina_2 = 0;
+                    mech.set_hina(act);
+
+                    if(state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1){
+                        result->result = HinaCmd::Result::OK;
+                        goal_handle->succeed(result);
+                        RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::UP_AND_PLACE OK");
+                        return;
+                    }
+                }
+                break;}
+            default:{
+                result->result = HinaCmd::Result::ERR_UNEXPECTED_ARG;
+                goal_handle->succeed(result);
+                RCLCPP_INFO(this->get_logger(), "ERR_UNEXPECTED_ARG");
+                return;}
+            }
+            RCLCPP_INFO(this->get_logger(), "loop: %d", i);
+            loop.sleep();
+        }
+        
+        result->result = HinaCmd::Result::ERR_TIMEOUT;
         goal_handle->succeed(result);
         RCLCPP_INFO(this->get_logger(), "ERR_TIMEOUT");
     }

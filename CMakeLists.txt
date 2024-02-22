@@ -22,8 +22,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MechaState.msg"
   "msg/PointAndMechaState.msg"
   "msg/PointAndMechaStateArray.msg"
-  "srv/MechCmd.srv"
-  "action/MechCmd.action"
   "action/DaizaCmd.action"
   "action/HinaCmd.action"
 )
