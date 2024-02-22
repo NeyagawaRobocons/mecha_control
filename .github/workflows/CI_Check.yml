@@ -15,6 +15,6 @@ jobs:
           docker pull ghcr.io/neyagawarobocons/robo_env_container:latest
       - name: colcon build
         run: |
-          docker run --workdir=/ROS_ws\
+          docker run --workdir=/ROS_ws \
           --volume=.:/ROS_ws/src/mecha_control ghcr.io/neyagawarobocons/robo_env_container:latest \
-          cd /ROS_ws && colcon build
+          cd ../.. && pwd && colcon build
