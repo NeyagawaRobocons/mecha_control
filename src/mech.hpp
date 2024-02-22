@@ -6,8 +6,6 @@
 #include <mutex>
 #include <unistd.h>
 
-#include "cmd_seq_class.hpp"
-
 
 class Mech
 {
@@ -40,7 +38,8 @@ public:
         bool launch_hina_2 = 0;
     };
 
-    Mech(rclcpp::Node *node){
+    template<class _Node>
+    Mech(_Node *node){
         this->daiza_pub_ = node->create_publisher<mecha_control::msg::ActuatorCommands>("daiza_clamp", 10);
         this->hina_pub_ = node->create_publisher<mecha_control::msg::ActuatorCommands>("hina_dastpan", 10);
         this->daiza_sensor_sub_ = node->create_subscription<mecha_control::msg::SensorStates>(
