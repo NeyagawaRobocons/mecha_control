@@ -43,9 +43,9 @@ public:
         this->daiza_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "daiza_clamp", 10);
         this->hina_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "hina_dastpan", 10);
         this->daiza_sensor_sub_ = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
-            node, "daiza_state", 10, std::bind(&Mech::daiza_sensor_callback, node, std::placeholders::_1));
+            node, "daiza_state", 10, std::bind(&Mech::daiza_sensor_callback, this, std::placeholders::_1));
         this->hina_sensor_sub_  = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
-            node, "hina_state", 10, std::bind(&Mech::hina_sensor_callback, node, std::placeholders::_1));
+            node, "hina_state", 10, std::bind(&Mech::hina_sensor_callback, this, std::placeholders::_1));
     }
     struct DaizaState get_daiza(){
         this->daiza_mutex.lock();
