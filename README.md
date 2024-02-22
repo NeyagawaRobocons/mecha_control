@@ -1,3 +1,5 @@
+[![CI](https://github.com/NeyagawaRobocons/mecha_control/actions/workflows/CI_Check.yml/badge.svg)](https://github.com/NeyagawaRobocons/mecha_control/actions/workflows/CI_Check.yml)
+
 # mecha_control
 機構制御＠ROS
 
