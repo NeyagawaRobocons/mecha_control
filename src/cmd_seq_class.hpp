@@ -1,7 +1,6 @@
 #pragma once
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "mecha_control/action/mech_cmd.hpp"
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
 #include "std_srvs/srv/set_bool.hpp"
