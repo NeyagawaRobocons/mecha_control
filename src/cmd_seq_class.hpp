@@ -81,7 +81,7 @@ private:
                 RCLCPP_INFO(this->get_logger(), "Goal canceled");
                 return;
             }
-            switch (goal)
+            switch (goal->command)
             {
             case DaizaCmd::Goal::STOP:
                 result->result = DaizaCmd::Result::OK;
