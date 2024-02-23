@@ -4,8 +4,6 @@
 #include "mecha_control/action/daiza_cmd.hpp"
 #include "mecha_control/action/hina_cmd.hpp"
 #include "std_srvs/srv/set_bool.hpp"
-#include "mecha_control/msg/actuator_commands.hpp"
-#include "mecha_control/msg/sensor_states.hpp"
 #include <thread>
 #include <mutex>
 #include <unistd.h>

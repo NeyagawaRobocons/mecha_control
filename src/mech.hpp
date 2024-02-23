@@ -1,7 +1,7 @@
 #pragma once
 #include "rclcpp/rclcpp.hpp"
-#include "mecha_control/msg/sensor_states.hpp"
-#include <iostream>
+#include "nucleo_agent/msg/actuator_commands.hpp"
+#include "nucleo_agent/msg/sensor_states.hpp"#include <iostream>
 #include <thread>
 #include <mutex>
 #include <unistd.h>
@@ -40,11 +40,11 @@ public:
 
     template<typename NodeT>
     Mech(NodeT && node) : daiza_mutex(), hina_mutex(){
-        this->daiza_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "daiza_clamp", 10);
-        this->hina_pub_ = rclcpp::create_publisher<mecha_control::msg::ActuatorCommands>(node, "hina_dastpan", 10);
-        this->daiza_sensor_sub_ = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
+        this->daiza_pub_ = rclcpp::create_publisher<nucleo_agent::msg::ActuatorCommands>(node, "daiza_clamp", 10);
+        this->hina_pub_ = rclcpp::create_publisher<nucleo_agent::msg::ActuatorCommands>(node, "hina_dastpan", 10);
+        this->daiza_sensor_sub_ = rclcpp::create_subscription<nucleo_agent::msg::SensorStates>(
             node, "daiza_state", 10, std::bind(&Mech::daiza_sensor_callback, this, std::placeholders::_1));
-        this->hina_sensor_sub_  = rclcpp::create_subscription<mecha_control::msg::SensorStates>(
+        this->hina_sensor_sub_  = rclcpp::create_subscription<nucleo_agent::msg::SensorStates>(
             node, "hina_state", 10, std::bind(&Mech::hina_sensor_callback, this, std::placeholders::_1));
     }
     struct DaizaState get_daiza(){
@@ -60,7 +60,7 @@ public:
         return ret;
     }
     void set_daiza(struct DaizaActuator act){
-        auto message = mecha_control::msg::ActuatorCommands();
+        auto message = nucleo_agent::msg::ActuatorCommands();
         message.cylinder_states.resize(4, false);
         message.cylinder_states[0] = act.clamp;
         message.cylinder_states[1] = act.clamp;
@@ -69,7 +69,7 @@ public:
         daiza_pub_->publish(message);
     }
     void set_hina(struct HinaActuator act){
-        auto message = mecha_control::msg::ActuatorCommands();
+        auto message = nucleo_agent::msg::ActuatorCommands();
         message.cylinder_states.resize(2, false);
         message.motor_expand.resize(1, false);
         message.motor_positions.resize(3, false);
@@ -83,22 +83,22 @@ public:
     }
 private:
     std::thread mech_observer;
-    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr daiza_pub_;      // cylinder_states.size()==4 && motor_expand.size()==0 && motor_positions.size()==0
-    rclcpp::Publisher<mecha_control::msg::ActuatorCommands>::SharedPtr hina_pub_;       // cylinder_states.size()==2 && motor_expand.size()==1 && motor_positions.size()==3
-    rclcpp::Subscription<mecha_control::msg::SensorStates>::SharedPtr daiza_sensor_sub_;
-    rclcpp::Subscription<mecha_control::msg::SensorStates>::SharedPtr hina_sensor_sub_;
+    rclcpp::Publisher<nucleo_agent::msg::ActuatorCommands>::SharedPtr daiza_pub_;      // cylinder_states.size()==4 && motor_expand.size()==0 && motor_positions.size()==0
+    rclcpp::Publisher<nucleo_agent::msg::ActuatorCommands>::SharedPtr hina_pub_;       // cylinder_states.size()==2 && motor_expand.size()==1 && motor_positions.size()==3
+    rclcpp::Subscription<nucleo_agent::msg::SensorStates>::SharedPtr daiza_sensor_sub_;
+    rclcpp::Subscription<nucleo_agent::msg::SensorStates>::SharedPtr hina_sensor_sub_;
     std::mutex daiza_mutex;
     struct DaizaState daiza;
     std::mutex hina_mutex;
     struct HinaState  hina;
-    void daiza_sensor_callback(const mecha_control::msg::SensorStates message) {
+    void daiza_sensor_callback(const nucleo_agent::msg::SensorStates message) {
         this->daiza_mutex.lock();
         this->daiza.is_clamp        = message.cylinder_states[0];
         this->daiza.is_guide_close  = message.cylinder_states[2];
         this->daiza.is_expand      = message.cylinder_states[3];
         this->daiza_mutex.unlock();
     }
-    void hina_sensor_callback(const mecha_control::msg::SensorStates message) {
+    void hina_sensor_callback(const nucleo_agent::msg::SensorStates message) {
         this->hina_mutex.lock();
         this->hina.angle         = message.potentiometer_angles[0];
         this->hina.is_up         = message.limit_switch_states[0];

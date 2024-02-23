@@ -14,11 +14,10 @@ find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(nucleo_agent REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/SensorStates.msg"
-  "msg/ActuatorCommands.msg"
   "msg/MechaState.msg"
   "msg/PointAndMechaState.msg"
   "msg/PointAndMechaStateArray.msg"
@@ -43,6 +42,7 @@ ament_target_dependencies(cmd_seq
   rclcpp_action
   std_srvs
   rosidl_default_generators
+  nucleo_agent
 )
 install(TARGETS cmd_seq
   DESTINATION lib/${PROJECT_NAME}
