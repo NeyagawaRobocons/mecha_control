@@ -18,4 +18,6 @@ jobs:
         run: |
           docker run --workdir=/ROS_ws \
           --volume=.:/ROS_ws/src/mecha_control ghcr.io/neyagawarobocons/robo_env_container:latest \
-          bash -c ". /opt/ros/humble/setup.bash && colcon build"
+          bash -c ". /opt/ros/humble/setup.bash \
+          && git clone https://github.com/NeyagawaRobocons/nucleo_agent \
+          && colcon build"
