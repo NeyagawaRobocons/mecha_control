@@ -101,7 +101,7 @@ private:
         auto feedback = std::make_shared<DaizaCmd::Feedback>();
         auto result = std::make_shared<DaizaCmd::Result>();
 
-        rclcpp::WallRate loop(0.1);
+        rclcpp::WallRate loop(10);
         u_int8_t step = 0;
         for (int i = 0; i < 100 && rclcpp::ok(); i++) {
             // Check if there is a cancel request
@@ -370,7 +370,7 @@ private:
         auto feedback = std::make_shared<HinaCmd::Feedback>();
         auto result = std::make_shared<HinaCmd::Result>();
 
-        rclcpp::WallRate loop(0.1);
+        rclcpp::WallRate loop(10);
         u_int8_t step = 0;
         for (int i = 0; i < 100 && rclcpp::ok(); i++) {
             // Check if there is a cancel request
