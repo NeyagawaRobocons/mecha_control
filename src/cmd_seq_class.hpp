@@ -389,7 +389,7 @@ private:
             case HinaCmd::Goal::READY:{
                 Mech::HinaActuator act;
                 act.angle = - 1.5707963267949;
-                act.up  = 0;
+                act.up  = 1;
                 act.guide_expand = 0;
                 act.launch_hina_1 = 0;
                 act.launch_hina_2 = 0;
@@ -398,7 +398,7 @@ private:
                 Mech::HinaState state = this->mech.get_hina();
                 if(
                     (state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1) && 
-                    state.is_down == 1
+                    state.is_up == 1
                 ){
                     result->result = HinaCmd::Result::OK;
                     goal_handle->succeed(result);
@@ -604,10 +604,11 @@ private:
                 mech.set_hina(act);
 
                 Mech::HinaState state = this->mech.get_hina();
-                if(state.is_down == 1){
+                if(state.is_down == 1 && step == 0){
                     feedback->feedback = HinaCmd::Feedback::DOWN_AT_DOWN_AND_TAKE;
                     goal_handle->publish_feedback(feedback);
                     RCLCPP_INFO(this->get_logger(), "DOWN_AT_DOWN_AND_TAKE");
+                    step++;
                 }
                 if(
                     (state.angle < act.angle + 0.1 || state.angle < act.angle - 0.1) && 
