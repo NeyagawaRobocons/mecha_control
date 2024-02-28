@@ -642,7 +642,7 @@ private:
                     Mech::HinaActuator act;
                     act.angle = - 1.5707963267949;
                     act.up  = 1;
-                    act.guide_expand = 0;
+                    act.guide_expand = 1;
                     act.launch_hina_1 = 0;
                     act.launch_hina_2 = 0;
                     mech.set_hina(act);
