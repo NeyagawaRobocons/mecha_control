@@ -460,7 +460,7 @@ private:
             case HinaCmd::Goal::POS_TAKE:{
                 Mech::HinaState state = this->mech.get_hina();
                 Mech::HinaActuator act;
-                act.angle = 0.0;
+                act.angle = 0.26179938779915;
                 act.up  = !state.is_down;
                 act.guide_expand = 0;
                 act.launch_hina_1 = 0;
@@ -596,7 +596,7 @@ private:
                 break;}
             case HinaCmd::Goal::DOWN_AND_TAKE:{
                 Mech::HinaActuator act;
-                act.angle = 0.0;
+                act.angle = 0.26179938779915;
                 act.up  = 0;
                 act.guide_expand = 0;
                 act.launch_hina_1 = 0;
