@@ -1,0 +1,14 @@
+#goal constants
+uint8 STOP=0
+uint8 READY=1
+uint8 EXPAND=2
+uint8 CONTRACT=3
+uint8 CLAMP=4
+uint8 UNCLAMP=5
+uint8 EXPAND_AND_UNCLAMP=6
+uint8 CLAMP_AND_CONTRACT=7
+uint8 EXPAND_AND_PLACE=8
+uint8 EXPAND_AND_PLACE_AND_CONTRACT=9
+
+#goal fields
+uint8 command
