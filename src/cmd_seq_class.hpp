@@ -193,34 +193,18 @@ private:
                 }
                 break;}
             case DaizaCmd::Goal::EXPAND_AND_UNCLAMP:{
-                if(step == 0){
-                    Mech::DaizaState state = this->mech.get_daiza();
-                    Mech::DaizaActuator act;
-                    act.expand = 1;
-                    act.clamp  = state.is_clamp;
-                    act.guide_close = state.is_guide_close;
-                    mech.set_daiza(act);
+                Mech::DaizaState state = this->mech.get_daiza();
+                Mech::DaizaActuator act;
+                act.expand = 1;
+                act.clamp  = 0;
+                act.guide_close = 0;
+                mech.set_daiza(act);
 
-                    if(state.is_expand == 1){
-                        feedback->feedback = DaizaCmd::Feedback::EXPANDED_AT_EXPAND_AND_UNCLAMP;
-                        goal_handle->publish_feedback(feedback);
-                        RCLCPP_INFO(this->get_logger(), "EXPANDED_AT_EXPAND_AND_UNCLAMP");
-                        step++;
-                    }
-                }else if(step == 1){
-                    Mech::DaizaState state = this->mech.get_daiza();
-                    Mech::DaizaActuator act;
-                    act.expand = 1;
-                    act.clamp  = 0;
-                    act.guide_close = 0;
-                    mech.set_daiza(act);
-
-                    if(state.is_clamp == 0 && state.is_guide_close == 0){
-                        result->result = DaizaCmd::Result::OK;
-                        goal_handle->succeed(result);
-                        RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::EXPAND_AND_UNCLAMP OK");
-                        return;
-                    }
+                if(state.is_expand == 1 && state.is_clamp == 0 && state.is_guide_close == 0){
+                    result->result = DaizaCmd::Result::OK;
+                    goal_handle->succeed(result);
+                    RCLCPP_INFO(this->get_logger(), "DaizaCmd::Goal::EXPAND_AND_UNCLAMP OK");
+                    return;
                 }
                 break;}
             case DaizaCmd::Goal::CLAMP_AND_CONTRACT:{
