@@ -23,6 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PointAndMechaStateArray.msg"
   "msg/DaizaCmdType.msg"
   "msg/HinaCmdType.msg"
+  "msg/MechAction.msg"
   "action/DaizaCmd.action"
   "action/HinaCmd.action"
 )
