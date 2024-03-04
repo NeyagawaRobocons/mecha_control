@@ -43,6 +43,7 @@ private:
     rclcpp_action::Server<DaizaCmd>::SharedPtr daiza_action_server;
     rclcpp_action::Server<HinaCmd>::SharedPtr hina_action_server;
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr bonbori_service;
+    double place_angle = 25.0 * M_PI / 180.0;
 
     //daiza action
     rclcpp_action::GoalResponse daiza_handle_goal(
@@ -461,7 +462,7 @@ private:
             case HinaCmd::Goal::POS_PLACE:{
                 Mech::HinaState state = this->mech.get_hina();
                 Mech::HinaActuator act;
-                act.angle = 0.17453292519943;
+                act.angle = place_angle;
                 act.up  = !state.is_down;
                 act.guide_expand = 1;
                 act.launch_hina_1 = 0;
@@ -643,7 +644,7 @@ private:
                 if(step == 0){
                     Mech::HinaState state = this->mech.get_hina();
                     Mech::HinaActuator act;
-                    act.angle = - 0.17453292519943;
+                    act.angle = - place_angle;
                     act.up  = 1;
                     act.guide_expand = 1;
                     act.launch_hina_1 = 0;
@@ -659,7 +660,7 @@ private:
                 }else if(step == 1){
                     Mech::HinaState state = this->mech.get_hina();
                     Mech::HinaActuator act;
-                    act.angle = 0.17453292519943;
+                    act.angle = place_angle;
                     act.up  = 1;
                     act.guide_expand = 1;
                     act.launch_hina_1 = 0;
