@@ -596,7 +596,7 @@ private:
                     step++;
                 }
                 if(
-                    (state.angle < act.angle + 0.3 || state.angle < act.angle - 0.3) && 
+                    (state.angle < act.angle + 0.3 && state.angle > act.angle - 0.3) && 
                     state.is_down == 1
                 ){
                     result->result = HinaCmd::Result::OK;
@@ -616,7 +616,7 @@ private:
                     act.launch_hina_2 = 0;
                     mech.set_hina(act);
 
-                    if(state.angle < act.angle + 0.3 || state.angle < act.angle - 0.3){
+                    if(state.angle < act.angle + 0.3 && state.angle > act.angle - 0.3){
                         feedback->feedback = HinaCmd::Feedback::UP_AT_UP_AND_CARRY;
                         goal_handle->publish_feedback(feedback);
                         RCLCPP_INFO(this->get_logger(), "UP_AT_UP_AND_CARRY");
@@ -667,7 +667,7 @@ private:
                     act.launch_hina_2 = 0;
                     mech.set_hina(act);
 
-                    if(state.angle < act.angle + 0.3 || state.angle < act.angle - 0.3){
+                    if(state.angle < act.angle + 0.3 && state.angle > act.angle - 0.3){
                         result->result = HinaCmd::Result::OK;
                         goal_handle->succeed(result);
                         RCLCPP_INFO(this->get_logger(), "HinaCmd::Goal::UP_AND_PLACE OK");
