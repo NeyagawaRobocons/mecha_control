@@ -373,9 +373,9 @@ private:
                 break;
             case HinaCmd::Goal::READY:{
                 Mech::HinaActuator act;
-                act.angle = - 1.5707963267949;
-                act.up  = 1;
-                act.guide_expand = 0;
+                act.angle = - 1.5707963267949 - 0.13089969389957;
+                act.up  = 0;
+                act.guide_expand = 1;
                 act.launch_hina_1 = 0;
                 act.launch_hina_2 = 0;
                 mech.set_hina(act);
@@ -383,7 +383,7 @@ private:
                 Mech::HinaState state = this->mech.get_hina();
                 if(
                     (state.angle < act.angle + 0.3 || state.angle < act.angle - 0.3) && 
-                    state.is_up == 1
+                    state.is_down == 1
                 ){
                     result->result = HinaCmd::Result::OK;
                     goal_handle->succeed(result);
@@ -428,7 +428,7 @@ private:
             case HinaCmd::Goal::POS_CARRY:{
                 Mech::HinaState state = this->mech.get_hina();
                 Mech::HinaActuator act;
-                act.angle = - 1.5707963267949;
+                act.angle = - 1.5707963267949 - 0.13089969389957;
                 act.up  = !state.is_down;
                 act.guide_expand = 0;
                 act.launch_hina_1 = 0;
@@ -609,7 +609,7 @@ private:
                 if(step == 0){
                     Mech::HinaState state = this->mech.get_hina();
                     Mech::HinaActuator act;
-                    act.angle = - 1.5707963267949;
+                    act.angle = - 1.5707963267949 - 0.13089969389957;
                     act.up  = !state.is_down;
                     act.guide_expand = 0;
                     act.launch_hina_1 = 0;
@@ -625,7 +625,7 @@ private:
                 }else if(step == 1){
                     Mech::HinaState state = this->mech.get_hina();
                     Mech::HinaActuator act;
-                    act.angle = - 1.5707963267949;
+                    act.angle = - 1.5707963267949 - 0.13089969389957;
                     act.up  = 1;
                     act.guide_expand = 1;
                     act.launch_hina_1 = 0;
