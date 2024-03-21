@@ -78,7 +78,7 @@ public:
         message.cylinder_states[1] = act.launch_hina_2;
         message.motor_expand[0]    = act.up;
         message.motor_positions[0] = act.angle;
-        message.motor_positions[1] = act.guide_expand ? 0.0 : -0.78539816339745;
+        message.motor_positions[1] = act.guide_expand ? 0.0 + 0.2 : -0.78539816339745;
         message.motor_positions[2] = act.guide_expand ? 0.0 : 0.78539816339745;
         hina_pub_->publish(message);
     }
